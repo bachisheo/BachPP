@@ -1,0 +1,8 @@
+while (short, long i = 12;) {
+	class GLAS = 12.2;
+	GLAS.color = 122;
+	allColor = 12 + 3 - 2 + 23 <= 323;
+	a << we != 2312;
+	color / color = 12.3e+12 % 9.-34 * 10.0;
+return 122222222222222222222222222222222222222222;
+}

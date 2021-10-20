@@ -1,0 +1,81 @@
+#include <map>
+#include <fstream>
+#include <iostream>
+#include <vector>
+
+#ifndef DEFS
+#define LetterSmall(c) c >= 'a' && c <= 'z'
+#define LetterBig(c) c >= 'A' && c <= 'Z'
+#define Letter(c) (LetterBig(c)) || (LetterSmall(c))
+#define Digit(c) c >= '0' && c <= '9'
+#define NotDigit(c) (Letter(c)) || c == '_'
+#define MAX_LEX 10
+#define MAX_TEXT 10000
+enum class MSG_ID{LONG_LEX, WAIT_E};
+//lexical terminals
+enum class lt {
+	While, Ret, Class, Short, Long, Int, Float,
+	ConstInt, ConstExp,
+	Id,
+	Dot, DotComma, Comma, LRoundBracket, RRoundBracket, LFigBracket, RFigBracket,
+	Plus, Minus, Less, More, Equal,
+	LogEqual, LessOrEqual, MoreOrEqual, NotEqual,
+	ShiftLeft, ShiftRight, DivSign, ModSign, MultSign, Error, End
+};
+//syntaxis terminals
+enum class st {
+	//base
+	TProgram, TListDeclarate, TInFuncDeclarate,
+	TDeclarate, TFunc, TFuncName, TDate, TType, 
+	TVarList, TVar, TName, TClass, 
+	//expressions
+	TExpr, TLogExpr, TShiftExpr, TAddExpr,
+	TMultExpr, TElExpr, TConst,
+	//operators
+	TOperator, TAssign, TBlock
+};
+const std::map<std::string, lt> KeyWords = {
+	{"while", lt::While},
+	{"return", lt::Ret},
+	{"class", lt::Class},
+	{"short", lt::Short},
+	{"long", lt::Long},
+	{"int", lt::Int},
+	{"float", lt::Float}
+};
+const std::map<lt, std::string> TypesName = {
+	{lt::While, "while"},
+	{lt::Ret, "return"},
+	{lt::Class, "class"},
+	{lt::Short, "short"},
+	{lt::Long, "long"},
+	{lt::Int, "int"},
+	{lt::Float, "float"},
+	{lt::ConstInt, "constint"},
+	{lt::ConstExp, "constexp"},
+	{lt::Id, "ID"},
+	{lt::Dot, "Dot"},
+	{lt::Comma, "Comma"},
+	{lt::DotComma, "DotComma"},
+	{lt::LRoundBracket, "LRoundBracket"},
+	{lt::RRoundBracket, "RRoundBracket"},
+	{lt::LFigBracket, "LFigBracket"},
+	{lt::RFigBracket, "RFigBracket"},
+	{lt::Plus, "Plus"},
+	{lt::Minus, "Minus"},
+	{lt::Less, "Less"},
+	{lt::More, "More"},
+	{lt::Equal, "Equal"},
+	{lt::LogEqual, "LogEqual"},
+	{lt::LessOrEqual, "LessOrEqual"},
+	{lt::MoreOrEqual, "MoreOrEqual"},
+	{lt::NotEqual, "NotEqual"},
+	{lt::ShiftLeft, "ShiftLeft"},
+	{lt::ShiftRight, "ShiftRight"},
+	{lt::DivSign, "DivSign"},
+	{lt::ModSign, "ModSign"},
+	{lt::MultSign, "MultSign"},
+	{lt::Error, "Error"},
+	{lt::End, "End"}
+};
+#endif // !DEFS
