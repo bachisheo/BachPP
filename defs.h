@@ -11,10 +11,10 @@
 #define NotDigit(c) (Letter(c)) || c == '_'
 #define MAX_LEX 10
 #define MAX_TEXT 10000
-enum class MSG_ID{LONG_LEX, WAIT_E};
+enum class MSG_ID { LONG_LEX, WAIT_TYPE, WAIT_LEX };
 //lexical terminals
 enum class lt {
-	While, Ret, Class, Short, Long, Int, Float,
+	While, Ret, Class, Short, Long, Int, Float, main,
 	ConstInt, ConstExp,
 	Id,
 	Dot, DotComma, Comma, LRoundBracket, RRoundBracket, LFigBracket, RFigBracket,
@@ -26,8 +26,8 @@ enum class lt {
 enum class st {
 	//base
 	TProgram, TListDeclarate, TInFuncDeclarate,
-	TDeclarate, TFunc, TFuncName, TDate, TType, 
-	TVarList, TVar, TName, TClass, 
+	TDeclarate, TFunc, TDate, TType,
+	TVarList, TVar, TName, TClass,
 	//expressions
 	TExpr, TLogExpr, TShiftExpr, TAddExpr,
 	TMultExpr, TElExpr, TConst,
@@ -41,7 +41,8 @@ const std::map<std::string, lt> KeyWords = {
 	{"short", lt::Short},
 	{"long", lt::Long},
 	{"int", lt::Int},
-	{"float", lt::Float}
+	{"float", lt::Float},
+	{"main", lt::main}
 };
 const std::map<lt, std::string> TypesName = {
 	{lt::While, "while"},
@@ -77,5 +78,18 @@ const std::map<lt, std::string> TypesName = {
 	{lt::MultSign, "MultSign"},
 	{lt::Error, "Error"},
 	{lt::End, "End"}
+};
+const std::map<st, std::vector<st>> FirstSynt = {
+		{st::TFunc, {st::TName}},
+		{st::TVar, {st::TName}},
+	{st::TDate, {st::TVar}},
+
+};
+
+const std::map<st, std::vector<lt>> FirstLex = {
+	{st::TName, {lt::Id}},
+	{st::TClass, {lt::Class }},
+	{st::TFunc, {lt::main}},
+	{st::TType, {lt::Float, lt::Short, lt::Long}}
 };
 #endif // !DEFS
