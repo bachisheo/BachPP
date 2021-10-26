@@ -1,6 +1,6 @@
 #include "Scanner.h"
 #pragma warning(disable: 4996)
-lt Scanner::ScanNumber(Lexema lex, int& len) {
+lt Scanner::ScanNumber(LexemaView lex, int& len) {
 	for (; Digit(t[ptr]); ++ptr, ++len)
 		if (len < MAX_LEX) {
 			lex[len] = t[ptr];
@@ -38,6 +38,10 @@ void Scanner::SkipIgnored() {
 					ptr++; col++;
 					if (t[ptr] == '\0')
 						return;
+					if (t[ptr] == '\n'){
+						col = 0;
+						line++;
+					}
 					if (t[ptr] == '*') {
 						if (t[ptr + 1] == '/') {
 							isCom = false;
@@ -56,7 +60,7 @@ void Scanner::SkipIgnored() {
 		}
 	}
 }
-lt Scanner::Scan(Lexema lex)
+lt Scanner::Scan(LexemaView lex)
 {
 	SkipIgnored();
 	for (size_t i = 0; i <= MAX_LEX; i++)
@@ -89,12 +93,12 @@ lt Scanner::Scan(Lexema lex)
 			ScanNumber(lex, len);
 		}
 		if (t[ptr] != 'e' && t[ptr] != 'E') {
-			ErrorMsg(MSG_ID::WAIT_E, line, col, { "e", "E" });
+			ErrorMsg(MSG_ID::WAIT_TYPE, line, col, { "e", "E" });
 			return lt::Error;
 		}
 		lex[len++] = t[ptr++];
 		if (t[ptr] != '+' && t[ptr] != '-' && !(Digit(t[ptr]))) {
-			ErrorMsg(MSG_ID::WAIT_E, line, col, { "+", "-", "число" });
+			ErrorMsg(MSG_ID::WAIT_TYPE, line, col, { "+", "-", "число" });
 			return lt::Error;
 		}
 		if (t[ptr] == '+' || t[ptr] == '-') {
@@ -102,7 +106,7 @@ lt Scanner::Scan(Lexema lex)
 			col++;
 		}
 		if (!(Digit(t[ptr]))) {
-			ErrorMsg(MSG_ID::WAIT_E, line, col, { "число" });
+			ErrorMsg(MSG_ID::WAIT_TYPE, line, col, { "число" });
 			return lt::Error;
 		}
 		ScanNumber(lex, len);
@@ -168,7 +172,7 @@ lt Scanner::Scan(Lexema lex)
 
 void Scanner::ScanAll()
 {
-	Lexema lex;
+	LexemaView lex;
 	lt res;
 	do {
 		res = Scan(lex);
@@ -187,12 +191,20 @@ Scanner::Scanner(const char* name) :line(0), col(0), size(0)
 	fclose(fin);
 }
 
+void Scanner::ErrorMsg(MSG_ID id, std::vector<std::string> params) {
+	ErrorMsg(id, this->line, this->col, params);
+}
 void Scanner::ErrorMsg(MSG_ID id, int str, int col, std::vector<std::string> params)
 {
 	switch (id) {
 	case MSG_ID::LONG_LEX: std::cout << "\nЛексема больше 10 символов!"; break;
-	case MSG_ID::WAIT_E:
-		std::cout << "\nДля данного типа ожидаается ";
+	case MSG_ID::WAIT_TYPE:
+		std::cout << "\nДля данного типа лексемы ожидаается ";
+		for (auto next : params)
+			std::cout << "\'" << next << "\',  ";
+		break;
+	case MSG_ID::WAIT_LEX:
+		std::cout << "\nДля данного синтаксиса ожидаается ";
 		for (auto next : params)
 			std::cout << "\'" << next << "\',  ";
 		break;
