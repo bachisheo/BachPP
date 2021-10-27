@@ -17,7 +17,7 @@ public:
 	void ScanAll();
 	Scanner(const char* name);
 	static void ErrorMsg(MSG_ID id, int str, int col, std::vector<std::string> params);
-	void ErrorMsg(MSG_ID id, std::vector<std::string> params);
+	void ErrorMsg(MSG_ID id, std::vector<std::string> params, bool isBegin = false);
 	int GetPtr() { return ptr; }
 	void SetPtr(int ptr) { this->ptr = ptr; }
 	void GetPtrs(int& ptr, int& line, int& col) {
@@ -30,6 +30,9 @@ public:
 		this->line = line;
 		this->col = col;
 	}
+	const char* GetText() {
+		return t;
+	}
 private:
 	lt ScanNumber(LexemaView lex, int &len);
 	FILE *fin;
@@ -38,5 +41,7 @@ private:
 	int ptr;
 	char* t;
 	int size;
+	int lexBeginCol;
+	int lexBeginLine;
 };
 

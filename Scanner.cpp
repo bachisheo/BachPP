@@ -17,7 +17,7 @@ void Scanner::SkipIgnored() {
 		case '\n':
 			ptr++;
 			line++;
-			col = 0;
+			col = 1;
 			break;
 		case ' ': case '\t':
 			ptr++;
@@ -30,7 +30,6 @@ void Scanner::SkipIgnored() {
 				while (t[++ptr] != '\n' && t[ptr] != '\0') {
 					col++;
 				}
-				line++;
 				break;
 			case '*': {
 				bool isCom = true;
@@ -38,8 +37,8 @@ void Scanner::SkipIgnored() {
 					ptr++; col++;
 					if (t[ptr] == '\0')
 						return;
-					if (t[ptr] == '\n'){
-						col = 0;
+					if (t[ptr] == '\n') {
+						col = 1;
 						line++;
 					}
 					if (t[ptr] == '*') {
@@ -63,10 +62,12 @@ void Scanner::SkipIgnored() {
 lt Scanner::Scan(LexemaView lex)
 {
 	SkipIgnored();
+
 	for (size_t i = 0; i <= MAX_LEX; i++)
 		lex[i] = 0;
 	int len = 0;
-
+	lexBeginCol = col;
+	lexBeginLine = line;
 	//ID AND KEYWORDS
 	if (NotDigit(t[ptr])) {
 		for (; Digit(t[ptr]) || NotDigit(t[ptr]); ++ptr, ++len)
@@ -180,7 +181,7 @@ void Scanner::ScanAll()
 	} while (res != lt::End);
 }
 
-Scanner::Scanner(const char* name) :line(0), col(0), size(0)
+Scanner::Scanner(const char* name) :line(1), col(1), size(0)
 {
 	fin = fopen(name, "r");
 	t = new char[MAX_TEXT];
@@ -191,20 +192,23 @@ Scanner::Scanner(const char* name) :line(0), col(0), size(0)
 	fclose(fin);
 }
 
-void Scanner::ErrorMsg(MSG_ID id, std::vector<std::string> params) {
-	ErrorMsg(id, this->line, this->col, params);
+void Scanner::ErrorMsg(MSG_ID id, std::vector<std::string> params, bool isBegin) {
+	if (isBegin)
+		ErrorMsg(id, this->lexBeginLine, this->lexBeginCol, params);
+	else
+		ErrorMsg(id, this->line, this->col, params);
 }
 void Scanner::ErrorMsg(MSG_ID id, int str, int col, std::vector<std::string> params)
 {
 	switch (id) {
 	case MSG_ID::LONG_LEX: std::cout << "\nЛексема больше 10 символов!"; break;
 	case MSG_ID::WAIT_TYPE:
-		std::cout << "\nДля данного типа лексемы ожидаается ";
+		std::cout << "\nДля данного типа лексемы ожидается ";
 		for (auto next : params)
 			std::cout << "\'" << next << "\',  ";
 		break;
 	case MSG_ID::WAIT_LEX:
-		std::cout << "\nДля данного синтаксиса ожидаается ";
+		std::cout << "\nДля данного синтаксиса ожидается ";
 		for (auto next : params)
 			std::cout << "\'" << next << "\',  ";
 		break;
