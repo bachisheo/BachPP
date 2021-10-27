@@ -6,7 +6,7 @@ class SyntacticalAnalyzer
 {
 public :
 	SyntacticalAnalyzer(Scanner sc) : sc(sc) {}
-	//аксиома
+	//Р°РєСЃРёРѕРјР° S
 	void Programm(lt endLex = lt::End);
 private:
 	Scanner sc;
@@ -14,7 +14,7 @@ private:
 	void SavePtrs();
 	void RestorePtrs();
 	int colPtr = 0, linePtr = 0, ptr = 0;
-	bool checkScan(lt lex, bool needMsg = true);
+	bool saveCheckScan(lt lex, bool needMsg = true);
 	//bool IsFirst(lt lex, st Syn);
 	void LexExit(std::vector<std::string> waiting);
 	void LexExit(lt waitingLex);
@@ -23,17 +23,15 @@ private:
 	void Data();//
 	void Variable();
 	void Name();//
-	void Type();
+	bool Type();
 	void ClassSynt();//
 	void Expression();
-	//void LogicalExpression();
-	//void ShiftExpression();
-	//void AdditionalExpression();
-	//void MultExpression();
-	//void ElementaryExpression();
-	//void Operator();
+	void LogicalExpression();
+	void ShiftExpression();
+	void AdditionalExpression();
+	void MultExpression();
+	void ElementaryExpression();
+	void Operator();
 	void Block();
-
-
 };
 

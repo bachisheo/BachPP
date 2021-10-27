@@ -14,7 +14,7 @@
 enum class MSG_ID { LONG_LEX, WAIT_TYPE, WAIT_LEX };
 //lexical terminals
 enum class lt {
-	While, Ret, Class, Short, Long, Int, Float, main,
+	While, Return, Class, Short, Long, Int, Float, main,
 	ConstInt, ConstExp,
 	Id,
 	Dot, DotComma, Comma, LRoundBracket, RRoundBracket, LFigBracket, RFigBracket,
@@ -34,9 +34,10 @@ enum class st {
 	//operators
 	TOperator, TAssign, TBlock
 };
+const std::vector<lt> LtTypes{ lt::Short, lt::Long, lt::Int, lt::Float };
 const std::map<std::string, lt> KeyWords = {
 	{"while", lt::While},
-	{"return", lt::Ret},
+	{"return", lt::Return},
 	{"class", lt::Class},
 	{"short", lt::Short},
 	{"long", lt::Long},
@@ -45,8 +46,9 @@ const std::map<std::string, lt> KeyWords = {
 	{"main", lt::main}
 };
 const std::map<lt, std::string> TypesName = {
+	{lt::main, "main"},
 	{lt::While, "while"},
-	{lt::Ret, "return"},
+	{lt::Return, "return"},
 	{lt::Class, "class"},
 	{lt::Short, "short"},
 	{lt::Long, "long"},

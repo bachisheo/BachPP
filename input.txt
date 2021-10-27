@@ -1,19 +1,23 @@
-// BachPP.cpp : Этот файл содержит функцию "main". Здесь начинается и заканчивается выполнение программы.
-//
-
-
-long int a, b, c;
-
-class A{}
-/*
+int b = d();
 class A{
- int func(){}
+	long int func(){
+		class B{};
+		return 12;
+	}
+};
+class A{
+	float c = s;
+	int func(){
+	 	int c = 12 + 12e+3;
+ 	}
+	class B{};
+};
 
+short int aA, bV = 12;
+int main(){
+	while(2 == a.b.c){
+		int i = 3;
+	}
+	short int si = shortFunc();
+		short int aA, bV = 12;
 }
-
-int main()
-{
-	
-
-}
-*/
