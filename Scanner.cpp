@@ -1,13 +1,13 @@
 #include "Scanner.h"
 #pragma warning(disable: 4996)
-lt Scanner::ScanNumber(LexemaView lex, int& len) {
+LexType Scanner::ScanNumber(LexemaView lex, int& len) {
 	for (; Digit(t[ptr]); ++ptr, ++len)
 		if (len < MAX_LEX) {
 			lex[len] = t[ptr];
 			++col;
 		}
 	if (len > MAX_LEX) ErrorMsg(MSG_ID::LONG_LEX, line, col, {});
-	return lt::ConstInt;
+	return LexType::ConstInt;
 }
 
 void Scanner::SkipIgnored() {
@@ -59,7 +59,7 @@ void Scanner::SkipIgnored() {
 		}
 	}
 }
-lt Scanner::Scan(LexemaView lex)
+LexType Scanner::Scan(LexemaView lex)
 {
 	SkipIgnored();
 
@@ -78,7 +78,7 @@ lt Scanner::Scan(LexemaView lex)
 		if (len > MAX_LEX) ErrorMsg(MSG_ID::LONG_LEX, line, col, {});
 		auto keyWordIt = KeyWords.find(lex);
 		if (keyWordIt == KeyWords.end())
-			return lt::Id;
+			return LexType::Id;
 		else return keyWordIt->second;
 	}
 	//CONSTS
@@ -86,7 +86,7 @@ lt Scanner::Scan(LexemaView lex)
 		ScanNumber(lex, len);
 		//NUMBER CONST
 		if (t[ptr] != '.' && t[ptr] != 'e' && t[ptr] != 'E')
-			return lt::ConstInt;
+			return LexType::ConstInt;
 		//EXPCONST
 		if (t[ptr] == '.') {
 			lex[len++] = t[ptr++];
@@ -95,12 +95,12 @@ lt Scanner::Scan(LexemaView lex)
 		}
 		if (t[ptr] != 'e' && t[ptr] != 'E') {
 			ErrorMsg(MSG_ID::WAIT_TYPE, line, col, { "e", "E" });
-			return lt::Error;
+			return LexType::Error;
 		}
 		lex[len++] = t[ptr++];
 		if (t[ptr] != '+' && t[ptr] != '-' && !(Digit(t[ptr]))) {
 			ErrorMsg(MSG_ID::WAIT_TYPE, line, col, { "+", "-", "число" });
-			return lt::Error;
+			return LexType::Error;
 		}
 		if (t[ptr] == '+' || t[ptr] == '-') {
 			lex[len++] = t[ptr++];
@@ -108,10 +108,10 @@ lt Scanner::Scan(LexemaView lex)
 		}
 		if (!(Digit(t[ptr]))) {
 			ErrorMsg(MSG_ID::WAIT_TYPE, line, col, { "число" });
-			return lt::Error;
+			return LexType::Error;
 		}
 		ScanNumber(lex, len);
-		return lt::ConstExp;
+		return LexType::ConstExp;
 	}
 	col++;
 	lex[len] = t[ptr];
@@ -120,65 +120,65 @@ lt Scanner::Scan(LexemaView lex)
 		if (t[ptr] == '<') {
 			lex[++len] = t[ptr];
 			ptr++, col++;
-			return lt::ShiftLeft;
+			return LexType::ShiftLeft;
 		};
 		if (t[ptr] == '=') {
 			lex[++len] = t[ptr];
 			ptr++, col++;
-			return lt::LessOrEqual;
+			return LexType::LessOrEqual;
 		};
-		return lt::Less;
+		return LexType::Less;
 	case '>':
 		if (t[ptr] == '>') {
 			lex[++len] = t[ptr];
 			ptr++, col++;
-			return lt::ShiftRight;
+			return LexType::ShiftRight;
 		};
 		if (t[ptr] == '=') {
 			lex[++len] = t[ptr];
 			ptr++, col++;
-			return lt::MoreOrEqual;
+			return LexType::MoreOrEqual;
 		};
-		return lt::More;
+		return LexType::More;
 	case '!':
 		if (t[ptr] == '=') {
 			lex[++len] = t[ptr];
 			ptr++, col++;
-			return lt::NotEqual;
+			return LexType::NotEqual;
 		};
-		return lt::Error;
+		return LexType::Error;
 	case '=':
 		if (t[ptr] == '=') {
 			lex[++len] = t[ptr];
 			ptr++; col++;
-			return lt::LogEqual;
+			return LexType::LogEqual;
 		}
-		return lt::Equal;
-	case '+': return lt::Plus;
-	case '-': return lt::Minus;
-	case '(': return lt::LRoundBracket;
-	case ')': return lt::RRoundBracket;
-	case '{': return lt::LFigBracket;
-	case '}': return lt::RFigBracket;
-	case '.': return lt::Dot;
-	case ',': return lt::Comma;
-	case ';': return lt::DotComma;
-	case '*': return lt::MultSign;
-	case '/': return lt::DivSign;
-	case '%': return lt::ModSign;
-	case '\0':return lt::End;
-	default: return lt::Error;
+		return LexType::Equal;
+	case '+': return LexType::Plus;
+	case '-': return LexType::Minus;
+	case '(': return LexType::LRoundBracket;
+	case ')': return LexType::RRoundBracket;
+	case '{': return LexType::LFigBracket;
+	case '}': return LexType::RFigBracket;
+	case '.': return LexType::Dot;
+	case ',': return LexType::Comma;
+	case ';': return LexType::DotComma;
+	case '*': return LexType::MultSign;
+	case '/': return LexType::DivSign;
+	case '%': return LexType::ModSign;
+	case '\0':return LexType::End;
+	default: return LexType::Error;
 	}
 }
 
 void Scanner::ScanAll()
 {
 	LexemaView lex;
-	lt res;
+	LexType res;
 	do {
 		res = Scan(lex);
 		std::cout << TypesName.find(res)->second << " --> " << lex << "\n";
-	} while (res != lt::End);
+	} while (res != LexType::End);
 }
 
 Scanner::Scanner(const char* name) :line(1), col(1), size(0)

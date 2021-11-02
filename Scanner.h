@@ -1,15 +1,20 @@
+/*
+* Лексический сканер, основанный на программной модели детерминированного конечного автомата лексики языка.
+* Группирует теpминальные символы, составляющие входную пpогpамму, в отдельные лексические элементы (лексемами).
+* За одно обращение выделяет только одну очередную лексему.
+* Никакая синтаксическая информация сканеру не доступна, 
+* синтаксис языка не должен учитываться при программировании сканера
+*/
 #include "defs.h"
 #include <stdio.h>
 
 #pragma once
-typedef char LexemaView[MAX_LEX + 1];
-typedef int b;
-
 class Scanner
 {
 public:
-	lt Scan(LexemaView lex);
-	lt Scan() {
+	LexType Scan(LexemaView lex);
+
+	LexType Scan() {
 		LexemaView lex;
 		return Scan(lex);
 	}
@@ -34,7 +39,7 @@ public:
 		return t;
 	}
 private:
-	lt ScanNumber(LexemaView lex, int &len);
+	LexType ScanNumber(LexemaView lex, int &len);
 	FILE *fin;
 	int line;
 	int col;

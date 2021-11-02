@@ -1,30 +1,37 @@
+/*
+* Синтаксический анализатор:
+* Правила лексики языка представляются в виде синтаксических диаграмм.
+* Каждой синтаксической диаграмме соответствует отдельный метод программы синтаксического анализатора.
+* Он не содержит параметров, если требуется только синтаксический контроль исходной цепочки.
+* В главной пpогpамме тpанслятоpа вызов блока синтаксического анализатоpа pеализуется вызовом той
+* функции, котоpая соответствует аксиоме
+*/
 #pragma once
 #include "Scanner.h"
-#define first3Func lt::LRoundBracket
-#define first3Data lt::Id
+#define first3Func LexType::LRoundBracket
+#define first3Data LexType::Id
 class SyntacticalAnalyzer
 {
 public :
 	SyntacticalAnalyzer(Scanner sc) : sc(sc) {}
 	//аксиома S
-	void Programm(lt endLex = lt::End);
+	void Programm(LexType endLex = LexType::End);
 private:
 	Scanner sc;
-	lt LookForward(int k = 1);
+	LexType LookForward(int k = 1);
 	void SavePtrs();
 	void RestorePtrs();
 	int colPtr = 0, linePtr = 0, ptr = 0;
-	bool saveCheckScan(lt lex, bool needMsg = true);
-	//bool IsFirst(lt lex, st Syn);
+	bool saveCheckScan(LexType lex, bool needMsg = true);
 	void LexExit(std::vector<std::string> waiting);
-	void LexExit(lt waitingLex);
+	void LexExit(LexType waitingLex);
 	void DeclarateInFunction();
 	void Function();
-	void Data();//
+	void Data();
 	void Variable();
-	void Name();//
+	void Name();
 	bool Type();
-	void ClassSynt();//
+	void ClassSynt();
 	void Expression();
 	void LogicalExpression();
 	void ShiftExpression();

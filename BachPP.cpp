@@ -1,5 +1,4 @@
-﻿// BachPP.cpp : Этот файл содержит функцию "main". Здесь начинается и заканчивается выполнение программы.
-//
+﻿// Главный класс проекта
 #include "Scanner.h"
 #include "SyntacticalAnalyzer.h"
 int main()
@@ -9,6 +8,8 @@ int main()
 	SyntacticalAnalyzer sa =  SyntacticalAnalyzer(sc);
 	sa.Programm();
 	//sc.ScanAll();
+	std::cout << "Ошибок не обнаружено!";
+
 
 }
 

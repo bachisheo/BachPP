@@ -4,27 +4,27 @@ void SyntacticalAnalyzer::Operator()
 	auto nextLex = LookForward();
 	switch (nextLex) {
 		//блок
-	case lt::LFigBracket: Block(); return;
+	case LexType::LFigBracket: Block(); return;
 		//while с предусловием
-	case lt::While:
+	case LexType::While:
 		sc.Scan();
-		if (!saveCheckScan(lt::LRoundBracket)) return;
+		if (!saveCheckScan(LexType::LRoundBracket)) return;
 		Expression();
-		if (!saveCheckScan(lt::RRoundBracket)) return;
+		if (!saveCheckScan(LexType::RRoundBracket)) return;
 		Operator();
 		return;
 		//присваивание 
-	case lt::Id:
+	case LexType::Id:
 		Name();
-		if (!saveCheckScan(lt::Equal)) return;
+		if (!saveCheckScan(LexType::Equal)) return;
 		Expression();
 		break;
-	case lt::Return:
+	case LexType::Return:
 		sc.Scan();
 		Expression();
 		break;
 	}
-	saveCheckScan(lt::DotComma);
+	saveCheckScan(LexType::DotComma);
 	int g = 2;
 	return;
 
@@ -33,11 +33,11 @@ void SyntacticalAnalyzer::Operator()
 void SyntacticalAnalyzer::Block()
 {
 	SavePtrs();
-	if (!saveCheckScan(lt::LFigBracket)) {
+	if (!saveCheckScan(LexType::LFigBracket)) {
 		return;
 	}
 	DeclarateInFunction();
-	if (!saveCheckScan(lt::RFigBracket)) {
+	if (!saveCheckScan(LexType::RFigBracket)) {
 		RestorePtrs();
 		return;
 	}
@@ -45,15 +45,15 @@ void SyntacticalAnalyzer::Block()
 
 //просканировать на k символов вперед без 
 //изменения указателей сканера
-lt SyntacticalAnalyzer::LookForward(int k)
+LexType SyntacticalAnalyzer::LookForward(int k)
 {
 	int _ptr, _col, _line;
 	sc.GetPtrs(_ptr, _line, _col);
-	lt lex = lt::End;
+	LexType lex = LexType::End;
 	for (size_t i = 0; i < k; i++)
 	{
 		lex = sc.Scan();
-		if (lex == lt::End)
+		if (lex == LexType::End)
 			break;
 	}
 	sc.SetPtrs(_ptr, _line, _col);
@@ -71,7 +71,7 @@ void SyntacticalAnalyzer::RestorePtrs()
 }
 //считывает лексему и возвращает указатель на прежнее место,
 //если лексема не равна заданной
-bool SyntacticalAnalyzer::saveCheckScan(lt neededLex, bool needMsg)
+bool SyntacticalAnalyzer::saveCheckScan(LexType neededLex, bool needMsg)
 {
 	int _ptr, _col, _line;
 	sc.GetPtrs(_ptr, _line, _col);
@@ -87,10 +87,10 @@ bool SyntacticalAnalyzer::saveCheckScan(lt neededLex, bool needMsg)
 
 void SyntacticalAnalyzer::Name()
 {
-	lt next = LookForward();
-	while (next == lt::Id) {
+	LexType next = LookForward();
+	while (next == LexType::Id) {
 		sc.Scan();
-		if (!saveCheckScan(lt::Dot, false))
+		if (!saveCheckScan(LexType::Dot, false))
 			return;
 		next = LookForward();
 	}
@@ -104,23 +104,24 @@ bool SyntacticalAnalyzer::Type()
 		LexExit({ "Type" });
 		return false;
 	}
-	if (lex == lt::Long || lex == lt::Short) {
-		if (!saveCheckScan(lt::Int)) {
+	if (lex == LexType::Long || lex == LexType::Short) {
+		if (!saveCheckScan(LexType::Int)) {
 			return false;
 		}
 	}
+
 	return true;
 }
 
 //---- class id { Programm } ;----
 void SyntacticalAnalyzer::ClassSynt()
 {
-	std::vector<lt> ltsBeforeProgramm = { lt::Class, lt::Id, lt::LFigBracket };
-	std::vector<lt> ltsAfterProgramm = { lt::RFigBracket, lt::DotComma };
+	std::vector<LexType> ltsBeforeProgramm = { LexType::Class, LexType::Id, LexType::LFigBracket };
+	std::vector<LexType> ltsAfterProgramm = { LexType::RFigBracket, LexType::DotComma };
 	for (auto lts : ltsBeforeProgramm)
 		if (!saveCheckScan(lts))
 			return;
-	Programm(lt::RFigBracket);
+	Programm(LexType::RFigBracket);
 	for (auto lts : ltsAfterProgramm)
 		if (!saveCheckScan(lts))
 			return;
@@ -129,7 +130,7 @@ void SyntacticalAnalyzer::Expression()
 {
 	LogicalExpression();
 	auto nextLex = LookForward();
-	while (nextLex == lt::LogEqual || nextLex == lt::NotEqual) {
+	while (nextLex == LexType::LogEqual || nextLex == LexType::NotEqual) {
 		sc.Scan();
 		LogicalExpression();
 		nextLex = LookForward();
@@ -140,8 +141,8 @@ void SyntacticalAnalyzer::LogicalExpression()
 {
 	ShiftExpression();
 	auto nextLex = LookForward();
-	while (nextLex == lt::Less || nextLex == lt::LessOrEqual ||
-		nextLex == lt::More || nextLex == lt::MoreOrEqual) {
+	while (nextLex == LexType::Less || nextLex == LexType::LessOrEqual ||
+		nextLex == LexType::More || nextLex == LexType::MoreOrEqual) {
 		sc.Scan();
 		ShiftExpression();
 		nextLex = LookForward();
@@ -152,7 +153,7 @@ void SyntacticalAnalyzer::ShiftExpression()
 {
 	AdditionalExpression();
 	auto nextLex = LookForward();
-	while (nextLex == lt::ShiftLeft || nextLex == lt::ShiftRight) {
+	while (nextLex == LexType::ShiftLeft || nextLex == LexType::ShiftRight) {
 		sc.Scan();
 		AdditionalExpression();
 		nextLex = LookForward();
@@ -162,11 +163,11 @@ void SyntacticalAnalyzer::ShiftExpression()
 void SyntacticalAnalyzer::AdditionalExpression()
 {
 	auto nextLex = LookForward();
-	if (nextLex == lt::Plus || nextLex == lt::Minus)
+	if (nextLex == LexType::Plus || nextLex == LexType::Minus)
 		sc.Scan();
 	MultExpression();
 	nextLex = LookForward();
-	while (nextLex == lt::Plus || nextLex == lt::Minus) {
+	while (nextLex == LexType::Plus || nextLex == LexType::Minus) {
 		sc.Scan();
 		MultExpression();
 		nextLex = LookForward();
@@ -177,7 +178,7 @@ void SyntacticalAnalyzer::MultExpression()
 {
 	ElementaryExpression();
 	auto nextLex = LookForward();
-	while (nextLex == lt::DivSign || nextLex == lt::ModSign || nextLex == lt::MultSign) {
+	while (nextLex == LexType::DivSign || nextLex == LexType::ModSign || nextLex == LexType::MultSign) {
 		sc.Scan();
 		ElementaryExpression();
 		nextLex = LookForward();
@@ -186,22 +187,22 @@ void SyntacticalAnalyzer::MultExpression()
 
 void SyntacticalAnalyzer::ElementaryExpression()
 {
-	lt nextLex = LookForward();
+	LexType nextLex = LookForward();
 	switch (nextLex) {
-	case lt::ConstExp: sc.Scan(); return;
-	case lt::ConstInt: sc.Scan(); return;
-	case lt::Id:
+	case LexType::ConstExp: sc.Scan(); return;
+	case LexType::ConstInt: sc.Scan(); return;
+	case LexType::Id:
 		Name();
 		nextLex = LookForward();
-		if (nextLex == lt::LRoundBracket) {
+		if (nextLex == LexType::LRoundBracket) {
 			sc.Scan();
-			if (!saveCheckScan(lt::RRoundBracket)) return;
+			if (!saveCheckScan(LexType::RRoundBracket)) return;
 		}
 		return;
-	case lt::LRoundBracket:
+	case LexType::LRoundBracket:
 		sc.Scan();
 		Expression();
-		if (!saveCheckScan(lt::RRoundBracket)) return;
+		if (!saveCheckScan(LexType::RRoundBracket)) return;
 		return;
 	default:
 		LexExit({ "No empty expression" });
@@ -213,11 +214,11 @@ void SyntacticalAnalyzer::ElementaryExpression()
 //     ---|     FUNCTION	|---
 //     ---|     DATA		|---
 //  ------------------------------
-void SyntacticalAnalyzer::Programm(lt endLex)
+void SyntacticalAnalyzer::Programm(LexType endLex)
 {
 	auto nextLex = LookForward();
 	while (nextLex != endLex) {
-		if (nextLex == lt::Class)
+		if (nextLex == LexType::Class)
 			ClassSynt();
 		else {
 			SavePtrs();
@@ -225,7 +226,7 @@ void SyntacticalAnalyzer::Programm(lt endLex)
 			//получить следующую за id лексему
 			nextLex = LookForward(2);
 			RestorePtrs();
-			if (nextLex == lt::LRoundBracket)
+			if (nextLex == LexType::LRoundBracket)
 				Function();
 			else
 				Data();
@@ -239,7 +240,7 @@ void SyntacticalAnalyzer::LexExit(std::vector<std::string> waiting)
 	sc.ErrorMsg(MSG_ID::WAIT_LEX, waiting);
 	exit(1);
 }
-void SyntacticalAnalyzer::LexExit(lt waitingLex)
+void SyntacticalAnalyzer::LexExit(LexType waitingLex)
 {
 	LexExit({ TypesName.find(waitingLex)->second });
 
@@ -251,10 +252,10 @@ void SyntacticalAnalyzer::LexExit(lt waitingLex)
 //  ------------------------------
 void SyntacticalAnalyzer::DeclarateInFunction()
 {
-	lt endLex = lt::RFigBracket;
-	lt nextLex = LookForward();
+	LexType endLex = LexType::RFigBracket;
+	LexType nextLex = LookForward();
 	while (nextLex != endLex) {
-		if (nextLex == lt::Class) {
+		if (nextLex == LexType::Class) {
 			ClassSynt();
 		}
 		else
@@ -269,9 +270,9 @@ void SyntacticalAnalyzer::DeclarateInFunction()
 void SyntacticalAnalyzer::Function()
 {
 	if (!Type()) return;
-	if (!saveCheckScan(lt::main, false)) Name();
-	if (!saveCheckScan(lt::LRoundBracket))	return;
-	if (!saveCheckScan(lt::RRoundBracket)) return;
+	if (!saveCheckScan(LexType::main, false)) Name();
+	if (!saveCheckScan(LexType::LRoundBracket))	return;
+	if (!saveCheckScan(LexType::RRoundBracket)) return;
 	Block();
 }
 //type var |;
@@ -280,19 +281,19 @@ void SyntacticalAnalyzer::Data()
 {
 	if (!Type()) return;
 	Name();
-	if (LookForward() == lt::Equal) {
+	if (LookForward() == LexType::Equal) {
 		sc.Scan();
 		Expression();
 	}
-	while (LookForward() == lt::Comma) {
+	while (LookForward() == LexType::Comma) {
 		sc.Scan();
 		Name();
-		if (LookForward() == lt::Equal) {
+		if (LookForward() == LexType::Equal) {
 			sc.Scan();
 			Expression();
 		}
 	};
-	saveCheckScan(lt::DotComma);
+	saveCheckScan(LexType::DotComma);
 }
 
 void SyntacticalAnalyzer::Variable()

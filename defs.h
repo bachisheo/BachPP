@@ -1,3 +1,6 @@
+/*
+* Основные определения и константы, используемые в программе
+*/
 #include <map>
 #include <fstream>
 #include <iostream>
@@ -11,9 +14,12 @@
 #define NotDigit(c) (Letter(c)) || c == '_'
 #define MAX_LEX 10
 #define MAX_TEXT 10000
+typedef char LexemaView[MAX_LEX + 1];
+
 enum class MSG_ID { LONG_LEX, WAIT_TYPE, WAIT_LEX };
+
 //lexical terminals
-enum class lt {
+enum class LexType {
 	While, Return, Class, Short, Long, Int, Float, main,
 	ConstInt, ConstExp,
 	Id,
@@ -22,8 +28,9 @@ enum class lt {
 	LogEqual, LessOrEqual, MoreOrEqual, NotEqual,
 	ShiftLeft, ShiftRight, DivSign, ModSign, MultSign, Error, End
 };
+
 //syntaxis terminals
-enum class st {
+enum class SyntType {
 	//base
 	TProgram, TListDeclarate, TInFuncDeclarate,
 	TDeclarate, TFunc, TDate, TType,
@@ -34,64 +41,66 @@ enum class st {
 	//operators
 	TOperator, TAssign, TBlock
 };
-const std::vector<lt> LtTypes{ lt::Short, lt::Long, lt::Int, lt::Float };
-const std::map<std::string, lt> KeyWords = {
-	{"while", lt::While},
-	{"return", lt::Return},
-	{"class", lt::Class},
-	{"short", lt::Short},
-	{"long", lt::Long},
-	{"int", lt::Int},
-	{"float", lt::Float},
-	{"main", lt::main}
+//semantic types
+enum class SemanticType{Function, Class, ClassObj, Variable, Empty};
+const std::vector<LexType> LtTypes{ LexType::Short, LexType::Long, LexType::Int, LexType::Float, LexType::Id };
+const std::map<std::string, LexType> KeyWords = {
+	{"while", LexType::While},
+	{"return", LexType::Return},
+	{"class", LexType::Class},
+	{"short", LexType::Short},
+	{"long", LexType::Long},
+	{"int", LexType::Int},
+	{"float", LexType::Float},
+	{"main", LexType::main}
 };
-const std::map<lt, std::string> TypesName = {
-	{lt::main, "main"},
-	{lt::While, "while"},
-	{lt::Return, "return"},
-	{lt::Class, "class"},
-	{lt::Short, "short"},
-	{lt::Long, "long"},
-	{lt::Int, "int"},
-	{lt::Float, "float"},
-	{lt::ConstInt, "constint"},
-	{lt::ConstExp, "constexp"},
-	{lt::Id, "ID"},
-	{lt::Dot, "Dot"},
-	{lt::Comma, "Comma"},
-	{lt::DotComma, "DotComma"},
-	{lt::LRoundBracket, "LRoundBracket"},
-	{lt::RRoundBracket, "RRoundBracket"},
-	{lt::LFigBracket, "LFigBracket"},
-	{lt::RFigBracket, "RFigBracket"},
-	{lt::Plus, "Plus"},
-	{lt::Minus, "Minus"},
-	{lt::Less, "Less"},
-	{lt::More, "More"},
-	{lt::Equal, "Equal"},
-	{lt::LogEqual, "LogEqual"},
-	{lt::LessOrEqual, "LessOrEqual"},
-	{lt::MoreOrEqual, "MoreOrEqual"},
-	{lt::NotEqual, "NotEqual"},
-	{lt::ShiftLeft, "ShiftLeft"},
-	{lt::ShiftRight, "ShiftRight"},
-	{lt::DivSign, "DivSign"},
-	{lt::ModSign, "ModSign"},
-	{lt::MultSign, "MultSign"},
-	{lt::Error, "Error"},
-	{lt::End, "End"}
+const std::map<LexType, std::string> TypesName = {
+	{LexType::main, "main"},
+	{LexType::While, "while"},
+	{LexType::Return, "return"},
+	{LexType::Class, "class"},
+	{LexType::Short, "short"},
+	{LexType::Long, "long"},
+	{LexType::Int, "int"},
+	{LexType::Float, "float"},
+	{LexType::ConstInt, "constint"},
+	{LexType::ConstExp, "constexp"},
+	{LexType::Id, "ID"},
+	{LexType::Dot, "Dot"},
+	{LexType::Comma, "Comma"},
+	{LexType::DotComma, "DotComma"},
+	{LexType::LRoundBracket, "LRoundBracket"},
+	{LexType::RRoundBracket, "RRoundBracket"},
+	{LexType::LFigBracket, "LFigBracket"},
+	{LexType::RFigBracket, "RFigBracket"},
+	{LexType::Plus, "Plus"},
+	{LexType::Minus, "Minus"},
+	{LexType::Less, "Less"},
+	{LexType::More, "More"},
+	{LexType::Equal, "Equal"},
+	{LexType::LogEqual, "LogEqual"},
+	{LexType::LessOrEqual, "LessOrEqual"},
+	{LexType::MoreOrEqual, "MoreOrEqual"},
+	{LexType::NotEqual, "NotEqual"},
+	{LexType::ShiftLeft, "ShiftLeft"},
+	{LexType::ShiftRight, "ShiftRight"},
+	{LexType::DivSign, "DivSign"},
+	{LexType::ModSign, "ModSign"},
+	{LexType::MultSign, "MultSign"},
+	{LexType::Error, "Error"},
+	{LexType::End, "End"}
 };
-const std::map<st, std::vector<st>> FirstSynt = {
-		{st::TFunc, {st::TName}},
-		{st::TVar, {st::TName}},
-	{st::TDate, {st::TVar}},
+const std::map<SyntType, std::vector<SyntType>> FirstSynt = {
+		{SyntType::TFunc, {SyntType::TName}},
+		{SyntType::TVar, {SyntType::TName}},
+	{SyntType::TDate, {SyntType::TVar}},
 
 };
 
-const std::map<st, std::vector<lt>> FirstLex = {
-	{st::TName, {lt::Id}},
-	{st::TClass, {lt::Class }},
-	{st::TFunc, {lt::main}},
-	{st::TType, {lt::Float, lt::Short, lt::Long}}
+const std::map<SyntType, std::vector<LexType>> FirstLex = {
+	{SyntType::TName, {LexType::Id}},
+	{SyntType::TClass, {LexType::Class }},
+	{SyntType::TFunc, {LexType::main}},
+	{SyntType::TType, {LexType::Float, LexType::Short, LexType::Long}}
 };
 #endif // !DEFS
