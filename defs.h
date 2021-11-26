@@ -16,10 +16,10 @@
 #define MAX_TEXT 10000
 typedef char LexemaView[MAX_LEX + 1];
 
-enum class MSG_ID { LONG_LEX, WAIT_TYPE, WAIT_LEX };
+enum class MSG_ID { LONG_LEX, WAIT_TYPE, SYNT_ERR, SEM_ERR };
 
 //lexical terminals
-enum class LexType {
+static enum class LexType {
 	While, Return, Class, Short, Long, Int, Float, main,
 	ConstInt, ConstExp,
 	Id,
@@ -42,8 +42,9 @@ enum class SyntType {
 	TOperator, TAssign, TBlock
 };
 //semantic types
-enum class SemanticType{Function, Class, ClassObj, Variable, Empty};
-const std::vector<LexType> LtTypes{ LexType::Short, LexType::Long, LexType::Int, LexType::Float, LexType::Id };
+static enum class SemanticType{Function, Class, ClassObj, Data, Empty, ShortInt, LongInt, Float, Undefined, NotType};
+const std::vector<LexType> TypeWords{ LexType::Short, LexType::Long, LexType::Int, LexType::Float, LexType::Id };
+
 const std::map<std::string, LexType> KeyWords = {
 	{"while", LexType::While},
 	{"return", LexType::Return},
@@ -63,8 +64,8 @@ const std::map<LexType, std::string> TypesName = {
 	{LexType::Long, "long"},
 	{LexType::Int, "int"},
 	{LexType::Float, "float"},
-	{LexType::ConstInt, "constint"},
-	{LexType::ConstExp, "constexp"},
+	{LexType::ConstInt, "const_int"},
+	{LexType::ConstExp, "const_exp"},
 	{LexType::Id, "ID"},
 	{LexType::Dot, "Dot"},
 	{LexType::Comma, "Comma"},
