@@ -7,17 +7,19 @@
 * функции, котоpая соответствует аксиоме
 */
 #pragma once
-#include "Scanner.h"
+#include "SemanticTree.h"
 #define first3Func LexType::LRoundBracket
 #define first3Data LexType::Id
 class SyntacticalAnalyzer
 {
 public :
-	SyntacticalAnalyzer(Scanner sc) : sc(sc) {}
+	SyntacticalAnalyzer(Scanner* sc);
 	//аксиома S
 	void Programm(LexType endLex = LexType::End);
+	std::vector<Node*> userTypes;
 private:
-	Scanner sc;
+	SemanticTree* _tree;
+	Scanner* _sc;
 	LexType LookForward(int k = 1);
 	void SavePtrs();
 	void RestorePtrs();

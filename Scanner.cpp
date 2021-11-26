@@ -99,7 +99,7 @@ LexType Scanner::Scan(LexemaView lex)
 		}
 		lex[len++] = t[ptr++];
 		if (t[ptr] != '+' && t[ptr] != '-' && !(Digit(t[ptr]))) {
-			ErrorMsg(MSG_ID::WAIT_TYPE, line, col, { "+", "-", "число" });
+			ErrorMsg(MSG_ID::WAIT_TYPE, line, col, { "+", "-", "С‡РёСЃР»Рѕ" });
 			return LexType::Error;
 		}
 		if (t[ptr] == '+' || t[ptr] == '-') {
@@ -107,7 +107,7 @@ LexType Scanner::Scan(LexemaView lex)
 			col++;
 		}
 		if (!(Digit(t[ptr]))) {
-			ErrorMsg(MSG_ID::WAIT_TYPE, line, col, { "число" });
+			ErrorMsg(MSG_ID::WAIT_TYPE, line, col, { "С‡РёСЃР»Рѕ" });
 			return LexType::Error;
 		}
 		ScanNumber(lex, len);
@@ -201,17 +201,22 @@ void Scanner::ErrorMsg(MSG_ID id, std::vector<std::string> params, bool isBegin)
 void Scanner::ErrorMsg(MSG_ID id, int str, int col, std::vector<std::string> params)
 {
 	switch (id) {
-	case MSG_ID::LONG_LEX: std::cout << "\nЛексема больше 10 символов!"; break;
+	case MSG_ID::LONG_LEX: std::cout << "\nР›РµРєСЃРµРјР° Р±РѕР»СЊС€Рµ 10 СЃРёРјРІРѕР»РѕРІ!"; break;
 	case MSG_ID::WAIT_TYPE:
-		std::cout << "\nДля данного типа лексемы ожидается ";
+		std::cout << "\nР”Р»СЏ РґР°РЅРЅРѕРіРѕ С‚РёРїР° Р»РµРєСЃРµРјС‹ РѕР¶РёРґР°РµС‚СЃСЏ ";
 		for (auto next : params)
 			std::cout << "\'" << next << "\',  ";
 		break;
-	case MSG_ID::WAIT_LEX:
-		std::cout << "\nДля данного синтаксиса ожидается ";
+	case MSG_ID::SYNT_ERR:
+		std::cout << "\nР”Р»СЏ РґР°РЅРЅРѕРіРѕ СЃРёРЅС‚Р°РєСЃРёСЃР° РѕР¶РёРґР°РµС‚СЃСЏ ";
 		for (auto next : params)
 			std::cout << "\'" << next << "\',  ";
+		break;
+	case MSG_ID::SEM_ERR:
+		std::cout << "\nРЎРµРјР°РЅС‚РёС‡РµСЃРєР°СЏ РѕС€РёР±РєР°: ";
+		for (auto next : params)
+			std::cout << std::endl << next;
 		break;
 	}
-	std::cout << " Строка " << str << " символ " << col << std::endl;
+	std::cout << " РЎС‚СЂРѕРєР° " << str << " СЃРёРјРІРѕР» " << col << std::endl;
 }

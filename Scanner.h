@@ -6,7 +6,6 @@
 * синтаксис языка не должен учитываться при программировании сканера
 */
 #include "defs.h"
-#include <stdio.h>
 
 #pragma once
 class Scanner
