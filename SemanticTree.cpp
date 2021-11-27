@@ -41,7 +41,7 @@ Node* SemanticTree::AddObject(LexemaView lv, SemanticType type)
 Node* SemanticTree::AddFunc(SemanticType returnedType, LexemaView funcName)
 {
 	if (IsUnique(funcName)) {
-		Node* func = new Node(new Data{SemanticType::Function, funcName  });
+		Node* func = new Node(new Data{ SemanticType::Function, funcName });
 		func->data->returnedType = returnedType;
 		AddBlock(func);
 		return func;
@@ -115,7 +115,7 @@ Node* SemanticTree::FindUp(LexemaView id)
 Node* SemanticTree::FindUp(Node* from, LexemaView id)
 {
 	auto par = from;
-	while (!(par == nullptr || par->data->id == id))
+	while (!(par == nullptr || !strcmp(par->data->id, id)))
 		par = par->GetParent();
 	return par;
 }
@@ -128,7 +128,7 @@ Node* SemanticTree::FindChild(LexemaView id) const
 Node* SemanticTree::FindChild(Node* from, LexemaView id)
 {
 	auto child = from->GetChild();
-	while (!(child == nullptr || child->data->id == id))
+	while (!(child == nullptr || !strcmp(child->data->id, id)))
 		child = child->GetNeighbor();
 	return child;
 }
@@ -162,7 +162,7 @@ SemanticType SemanticTree::GetType(LexType type_type, LexemaView type_view)
 		auto nod = FindUp(type_view);
 		if (nod != nullptr)
 		{
-			if (nod->data->dataType == SemanticType::Class) {
+			if (nod->data->type == SemanticType::Class) {
 				return SemanticType::ClassObj;
 			}
 		}
@@ -177,24 +177,40 @@ bool SemanticTree::IsUnique(LexemaView lv)
 {
 	return FindUp(lv) == nullptr;
 }
-
-SemanticType SemanticTree::GetTypeByView(LexemaView lv)
+std::string StringNameByView(std::vector<char*> ids)
 {
-	auto node = FindUp(lv);
+	std::string name = ids[0];
+	for (int i = 1; i < ids.size(); i++)
+	{
+		name += ".";
+		name += ids[i];
+	}
+	return name;
+}
+SemanticType SemanticTree::GetTypeByView(std::vector<char*> ids, bool isFunc)
+{
+	auto node = FindUp(ids[0]);
 	//?
 	if (node == nullptr)
 	{
-
+		_sc->ErrorMsg(MSG_ID::SEM_ERR, { "Объекта с именем ", ids[0], " не существует" }); \
+		return SemanticType::Undefined;
 	}
-	else
+	if (isFunc)
 	{
-		if (node->data->dataType == SemanticType::ClassObj)
+		if(node->data->type != SemanticType::Function)
 		{
-			//todo проверить, соответсвует ли обращение к полю класса его описанию
-
+			_sc->ErrorMsg(MSG_ID::SEM_ERR, { "Объект с именем ", ids[0], " не является функцией" });
+			return SemanticType::Undefined;
 		}
-		return node->data->type;
+		return node->data->returnedType;
 	}
+	if (node->data->type == SemanticType::ClassObj)
+	{
+		//todo проверить сответсвие обращения сигнатуре класса
+		//todo вернуть тип поля класса
+	}
+	return node->data->type;
 }
 
 SemanticType SemanticTree::GetConstType(LexemaView lv, LexType lt)
@@ -249,6 +265,7 @@ bool SemanticTree::IsEnableUnarySign(SemanticType type)
 	if (type == SemanticType::LongInt || type == SemanticType::Float ||
 		type == SemanticType::ShortInt)
 		return true;
+	_sc->ErrorMsg(MSG_ID::SEM_ERR, { "С опреандом данного типа не совместимы унарные операции " });
 	return false;
 }
 /// <summary>

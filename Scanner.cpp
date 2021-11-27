@@ -119,33 +119,33 @@ LexType Scanner::Scan(LexemaView lex)
 	case '<':
 		if (t[ptr] == '<') {
 			lex[++len] = t[ptr];
-			ptr++, col++;
+			ptr++; col++;
 			return LexType::ShiftLeft;
-		};
+		}
 		if (t[ptr] == '=') {
 			lex[++len] = t[ptr];
-			ptr++, col++;
+			ptr++; col++;
 			return LexType::LessOrEqual;
-		};
+		}
 		return LexType::Less;
 	case '>':
 		if (t[ptr] == '>') {
 			lex[++len] = t[ptr];
-			ptr++, col++;
+			ptr++; col++;
 			return LexType::ShiftRight;
-		};
+		}
 		if (t[ptr] == '=') {
 			lex[++len] = t[ptr];
-			ptr++, col++;
+			ptr++; col++;
 			return LexType::MoreOrEqual;
-		};
+		}
 		return LexType::More;
 	case '!':
 		if (t[ptr] == '=') {
 			lex[++len] = t[ptr];
-			ptr++, col++;
-			return LexType::NotEqual;
-		};
+			ptr++; col++;
+			return LexType::LogNotEqual;
+		}
 		return LexType::Error;
 	case '=':
 		if (t[ptr] == '=') {
@@ -173,9 +173,9 @@ LexType Scanner::Scan(LexemaView lex)
 
 void Scanner::ScanAll()
 {
-	LexemaView lex;
 	LexType res;
 	do {
+		LexemaView lex;
 		res = Scan(lex);
 		std::cout << TypesName.find(res)->second << " --> " << lex << "\n";
 	} while (res != LexType::End);

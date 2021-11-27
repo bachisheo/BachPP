@@ -19,13 +19,13 @@ typedef char LexemaView[MAX_LEX + 1];
 enum class MSG_ID { LONG_LEX, WAIT_TYPE, SYNT_ERR, SEM_ERR };
 
 //lexical terminals
-static enum class LexType {
+enum class LexType {
 	While, Return, Class, Short, Long, Int, Float, main,
 	ConstInt, ConstExp,
 	Id,
 	Dot, DotComma, Comma, LRoundBracket, RRoundBracket, LFigBracket, RFigBracket,
 	Plus, Minus, Less, More, Equal,
-	LogEqual, LessOrEqual, MoreOrEqual, NotEqual,
+	LogEqual, LessOrEqual, MoreOrEqual, LogNotEqual,
 	ShiftLeft, ShiftRight, DivSign, ModSign, MultSign, Error, End
 };
 
@@ -42,7 +42,7 @@ enum class SyntType {
 	TOperator, TAssign, TBlock
 };
 //semantic types
-static enum class SemanticType{Function, Class, ClassObj, Data, Empty, ShortInt, LongInt, Float, Undefined, NotType};
+enum class SemanticType{Function, Class, ClassObj, Data, Empty, ShortInt, LongInt, Float, Undefined, NotType};
 const std::vector<LexType> TypeWords{ LexType::Short, LexType::Long, LexType::Int, LexType::Float, LexType::Id };
 
 const std::map<std::string, LexType> KeyWords = {
@@ -82,7 +82,7 @@ const std::map<LexType, std::string> TypesName = {
 	{LexType::LogEqual, "LogEqual"},
 	{LexType::LessOrEqual, "LessOrEqual"},
 	{LexType::MoreOrEqual, "MoreOrEqual"},
-	{LexType::NotEqual, "NotEqual"},
+	{LexType::LogNotEqual, "LogNotEqual"},
 	{LexType::ShiftLeft, "ShiftLeft"},
 	{LexType::ShiftRight, "ShiftRight"},
 	{LexType::DivSign, "DivSign"},

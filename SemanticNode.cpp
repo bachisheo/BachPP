@@ -52,9 +52,9 @@ Node* Node::GetNeighbor()
 
 void Node::Print()
 {
-    std::cout << "Óçåë id: " << data->id << ", ñîñåä: " << _neighbor->data->id;
+    std::cout << "Ð£Ð·ÐµÐ» id: " << data->id << ", ÑÐ¾ÑÐµÐ´: " << _neighbor->data->id;
 
-    std::cout <<  "\nïîòîìêè:";
+    std::cout <<  "\nÐ¿Ð¾Ñ‚Ð¾Ð¼ÐºÐ¸:";
     auto tmp = _child;
     while (tmp != nullptr) {
         std::cout << tmp->data->id << " | ";

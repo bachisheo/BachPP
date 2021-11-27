@@ -16,8 +16,8 @@ public:
 	Node* GetParent() const;
 	Node* AddChild(Node* child);
 	Node* AddNeighbor(Node* neighbor);
-	Node* GetNeighbor();;
-	Node* FindUp(LexemaView id);;
+	Node* GetNeighbor();
+	Node* FindUp(LexemaView id);
 	static Node* FindUp(Node* from, LexemaView id);
 	Node* FindChild(LexemaView id) const;
 	static Node* FindChild(Node* from, LexemaView id);
@@ -29,7 +29,7 @@ public:
 	SemanticType GetType(LexType type_type, LexemaView type_view);
 	bool IsUnique(LexemaView lv);
 	//при обращении
-	SemanticType GetTypeByView(LexemaView lv);
+	SemanticType GetTypeByView(std::vector<char*> ids, bool isFunc = false);
 	SemanticType	GetConstType(LexemaView lv, LexType lt);
 	SemanticType GetResultType(SemanticType a, SemanticType b, LexType sign);
 	bool IsEnableUnarySign(SemanticType type);

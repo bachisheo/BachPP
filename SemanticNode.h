@@ -4,7 +4,7 @@
 class Node;
 struct Data {
 	SemanticType type = SemanticType::Undefined;
-	SemanticType returnedType = 
+	SemanticType returnedType = SemanticType::Empty;
 	LexemaView id;
 	Data(SemanticType semType,const LexemaView idView):type(semType)
 	{
