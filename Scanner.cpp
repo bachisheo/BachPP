@@ -1,4 +1,5 @@
 #include "Scanner.h"
+
 #pragma warning(disable: 4996)
 LexType Scanner::ScanNumber(LexemaView lex, int& len) {
 	for (; Digit(t[ptr]); ++ptr, ++len)
@@ -6,6 +7,7 @@ LexType Scanner::ScanNumber(LexemaView lex, int& len) {
 			lex[len] = t[ptr];
 			++col;
 		}
+
 	if (len > MAX_LEX) ErrorMsg(MSG_ID::LONG_LEX, line, col, {});
 	return LexType::ConstInt;
 }
@@ -59,12 +61,28 @@ void Scanner::SkipIgnored() {
 		}
 	}
 }
-LexType Scanner::Scan(LexemaView lex)
+static std::string cut(std::string & s)
+{
+	for (size_t i = 0; i < s.size(); i++)
+	{
+		if (s[i] == '\0') {
+			s.resize(i);
+			break;
+		}
+	}
+	return s;
+}
+LexType Scanner::Scan(LexemaView & lex)
+{
+	lex.resize(MAX_LEX + 1);
+	const auto type = _Scan(lex);
+	cut(lex);
+	return type;
+}
+LexType Scanner::_Scan(LexemaView & lex)
 {
 	SkipIgnored();
 
-	for (size_t i = 0; i <= MAX_LEX; i++)
-		lex[i] = 0;
 	int len = 0;
 	lexBeginCol = col;
 	lexBeginLine = line;
@@ -76,6 +94,7 @@ LexType Scanner::Scan(LexemaView lex)
 				++col;
 			}
 		if (len > MAX_LEX) ErrorMsg(MSG_ID::LONG_LEX, line, col, {});
+		cut(lex);
 		auto keyWordIt = KeyWords.find(lex);
 		if (keyWordIt == KeyWords.end())
 			return LexType::Id;
@@ -181,42 +200,42 @@ void Scanner::ScanAll()
 	} while (res != LexType::End);
 }
 
-Scanner::Scanner(const char* name) :line(1), col(1), size(0)
+Scanner::Scanner(const char* name) : line(1), col(1), ptr(0), size(0), lexBeginCol(0), lexBeginLine(0)
 {
-	fin = fopen(name, "r");
+	fopen_s(&fin, name, "r");
 	t = new char[MAX_TEXT];
 	while (!feof(fin))
-		fscanf(fin, "%c", &t[size++]);
+		fscanf_s(fin, "%c", &t[size++]);
 	size--;
 	t[size] = '\0';
 	fclose(fin);
 }
 
-void Scanner::ErrorMsg(MSG_ID id, std::vector<std::string> params, bool isBegin) {
+void Scanner::ErrorMsg(MSG_ID id, const std::vector<std::string>& params, bool isBegin) {
 	if (isBegin)
 		ErrorMsg(id, this->lexBeginLine, this->lexBeginCol, params);
 	else
 		ErrorMsg(id, this->line, this->col, params);
 }
-void Scanner::ErrorMsg(MSG_ID id, int str, int col, std::vector<std::string> params)
+void Scanner::ErrorMsg(MSG_ID id, int str, int col, const std::vector<std::string>& params)
 {
 	switch (id) {
 	case MSG_ID::LONG_LEX: std::cout << "\nЛексема больше 10 символов!"; break;
 	case MSG_ID::WAIT_TYPE:
-		std::cout << "\nДля данного типа лексемы ожидается ";
+		std::cout << "\nДля данного типа лексемы ожидается: \"";
 		for (auto next : params)
 			std::cout << "\'" << next << "\',  ";
 		break;
 	case MSG_ID::SYNT_ERR:
-		std::cout << "\nДля данного синтаксиса ожидается ";
+		std::cout << "\nДля данного синтаксиса ожидается: \"";
 		for (auto next : params)
 			std::cout << "\'" << next << "\',  ";
 		break;
 	case MSG_ID::SEM_ERR:
-		std::cout << "\nСемантическая ошибка: ";
+		std::cout << "\nСемантическая ошибка: \"";
 		for (auto next : params)
-			std::cout << std::endl << next;
+			std::cout << " " << next;
 		break;
 	}
-	std::cout << " Строка " << str << " символ " << col << std::endl;
+	std::cout << "\" Строка " << str << " символ " << col << std::endl;
 }

@@ -1,10 +1,11 @@
-﻿#include "SemanticTree.h"
+#include "SemanticTree.h"
 
-bool SemanticTree::IsDataType(SemanticType type)
+
+bool SemanticTree::IsDataType(SemanticType type) const
 {
 	if (!(type == SemanticType::LongInt || type == SemanticType::ShortInt || type == SemanticType::Float))
 	{
-		_sc->ErrorMsg(MSG_ID::SEM_ERR, { "Тип переменной не является численным" });
+		SemanticExit({ "Тип переменной не является численным" });
 		return false;
 	}
 	return true;
@@ -12,39 +13,52 @@ bool SemanticTree::IsDataType(SemanticType type)
 
 SemanticTree::SemanticTree(Scanner* sc) :_sc(sc)
 {
-	_current = _root = nullptr;
+	_current  = nullptr;
 }
 
-Node* SemanticTree::AddObject(LexemaView lv, SemanticType type)
+Node* SemanticTree::AddObject(const LexemaView& lv, SemanticType type)
 {
-	if (FindUp(lv) != nullptr)
+	return AddObject({ lv,type });
+}
+Node* SemanticTree::AddClassObject(const LexemaView & objName, const LexemaView & className)
+{
+	auto classNode = FindUp(className);
+	if(classNode == nullptr)
+	{
+		SemanticExit({ "Класса с именем \'", className, "\' не существует" });
+	}
+	auto obj = AddObject({ objName, SemanticType::ClassObj });
+	obj->
+
+}
+Node* SemanticTree::AddObject(Data data)
+{
+	auto n = FindUp(data.id);
+	if (n != nullptr)
 	{
 		std::string s = "Идентификатор ";
-		s += lv;
+		s += data.id;
 		s += " не уникален";
 		SemanticExit({ s });
 	}
-	auto tmp = new Node(new Data(type, lv));
 	if (_root == nullptr)
 	{
-		_root = tmp;
-		_current = _root;
+		_root = std::make_unique<Node>(data);
+		_current = _root.get();
 	}
 	else
 	{
-		_current->AddNeighbor(tmp);
-		_current = tmp;
+		_current = _current->AddNeighbor(data);
 	}
-	return tmp;
+	return _current;
 }
 
-Node* SemanticTree::AddFunc(SemanticType returnedType, LexemaView funcName)
+Node* SemanticTree::AddFunc(SemanticType returnedType, const LexemaView& funcName)
 {
 	if (IsUnique(funcName)) {
-		Node* func = new Node(new Data{ SemanticType::Function, funcName });
-		func->data->returnedType = returnedType;
-		AddBlock(func);
-		return func;
+		Data funcData = { funcName, SemanticType::Function };
+		funcData.returnedType = returnedType;
+		return AddBlock(funcData);
 	}
 	return nullptr;
 }
@@ -54,35 +68,33 @@ void SemanticTree::SetTreePtr(Node* current)
 	_current = current;
 }
 
-Node* SemanticTree::AddClass(LexemaView className)
+Node* SemanticTree::AddClass(const LexemaView& className)
 {
 	if (IsUnique(className)) {
-		Node* _class = new Node(new Data{ SemanticType::Class, className });
-		AddBlock(_class);
-		return _class;
+		return AddBlock({ className, SemanticType::Class });
 	}
 	return nullptr;
 }
 
-Node* SemanticTree::AddBlock()
+Node* SemanticTree::AddCompoundBlock()
 {
-	return AddBlock(new Node());
+	return AddBlock({ "emptyNode", SemanticType::Empty });
 }
 
-Node* SemanticTree::AddBlock(Node* parentNode)
+Node* SemanticTree::AddBlock(Data parentData)
 {
-	_current->AddNeighbor(parentNode);
-	_current = parentNode->AddChild(new Node);
-	return parentNode;
+	Node* parent = AddObject(parentData);
+	_current = parent->AddChild({ "emptyNode", SemanticType::Empty });
+	return parent;
 }
 
-void SemanticTree::SemanticExit(std::vector<std::string> errMsg) const
+void SemanticTree::SemanticExit(const std::vector<std::string>& errMsg) const 
 {
 	_sc->ErrorMsg(MSG_ID::SEM_ERR, errMsg);
 	exit(1);
 }
 
-void SemanticTree::SetParent(Node* parent)
+void SemanticTree::SetParent(Node* parent) const
 {
 	_current->SetParent(parent);
 }
@@ -92,43 +104,44 @@ Node* SemanticTree::GetParent() const
 	return _current->GetParent();
 }
 
-Node* SemanticTree::AddChild(Node* child)
+Node* SemanticTree::AddNeighbor(Data data) 
 {
-	return _current->AddChild(child);
+	_current = _current->AddNeighbor(data);
+	return _current;
 }
 
-Node* SemanticTree::AddNeighbor(Node* neighbor)
-{
-	return _current->AddNeighbor(neighbor);
-}
-
-Node* SemanticTree::GetNeighbor()
+Node* SemanticTree::GetNeighbor() const
 {
 	return _current->GetNeighbor();
 }
 
-Node* SemanticTree::FindUp(LexemaView id)
+Node* SemanticTree::FindUp(const LexemaView& id) const
 {
 	return FindUp(_current, id);
 }
 
-Node* SemanticTree::FindUp(Node* from, LexemaView id)
+Node* SemanticTree::FindUp(Node* from, const LexemaView& id)
 {
 	auto par = from;
-	while (!(par == nullptr || !strcmp(par->data->id, id)))
+	while (par != nullptr) {
+		if(par->_data->id == id)
+		{
+			break;
+		}
 		par = par->GetParent();
+	}
 	return par;
 }
 
-Node* SemanticTree::FindChild(LexemaView id) const
+Node* SemanticTree::FindChild(const LexemaView& id) const
 {
 	return FindChild(_current, id);
 }
 
-Node* SemanticTree::FindChild(Node* from, LexemaView id)
+Node* SemanticTree::FindChild(const Node* from, const LexemaView& id)
 {
 	auto child = from->GetChild();
-	while (!(child == nullptr || !strcmp(child->data->id, id)))
+	while (!(child == nullptr || child->_data->id != id))
 		child = child->GetNeighbor();
 	return child;
 }
@@ -149,7 +162,7 @@ SemanticType SemanticTree::GetType(LexType type_type, LexType next_type)
 	}
 }
 
-SemanticType SemanticTree::GetType(LexType type_type, LexemaView type_view)
+SemanticType SemanticTree::GetType(LexType type_type, const LexemaView& type_view) const
 {
 	switch (type_type)
 	{
@@ -162,10 +175,11 @@ SemanticType SemanticTree::GetType(LexType type_type, LexemaView type_view)
 		auto nod = FindUp(type_view);
 		if (nod != nullptr)
 		{
-			if (nod->data->type == SemanticType::Class) {
+			if (nod->_data->type == SemanticType::Class) {
 				return SemanticType::ClassObj;
 			}
 		}
+		return SemanticType::Undefined;
 	}
 	default:
 		return SemanticType::Undefined;
@@ -173,47 +187,51 @@ SemanticType SemanticTree::GetType(LexType type_type, LexemaView type_view)
 }
 
 ///
-bool SemanticTree::IsUnique(LexemaView lv)
+bool SemanticTree::IsUnique(const LexemaView& lv) const
 {
 	return FindUp(lv) == nullptr;
 }
-std::string StringNameByView(std::vector<char*> ids)
+std::string StringNameByView(std::vector<LexemaView> ids)
 {
 	std::string name = ids[0];
-	for (int i = 1; i < ids.size(); i++)
+	for (size_t i = 1; i < ids.size(); i++)
 	{
 		name += ".";
 		name += ids[i];
 	}
 	return name;
 }
-SemanticType SemanticTree::GetTypeByView(std::vector<char*> ids, bool isFunc)
+SemanticType SemanticTree::GetTypeByView(std::vector<LexemaView> & ids, bool isFunc) const
 {
-	auto node = FindUp(ids[0]);
+	const auto node = FindUp(ids[0]);
 	//?
 	if (node == nullptr)
 	{
-		_sc->ErrorMsg(MSG_ID::SEM_ERR, { "Объекта с именем ", ids[0], " не существует" }); \
-		return SemanticType::Undefined;
+		SemanticExit({ "Объекта с именем \'", ids[0], "\' не существует" }); 
+			return SemanticType::Undefined;
+	}
+	if(node->_data->type == SemanticType::ClassObj)
+	{
+		
 	}
 	if (isFunc)
 	{
-		if(node->data->type != SemanticType::Function)
+		if (node->_data->type != SemanticType::Function)
 		{
-			_sc->ErrorMsg(MSG_ID::SEM_ERR, { "Объект с именем ", ids[0], " не является функцией" });
+			SemanticExit( { "Объект с именем \'", StringNameByView(ids), "\' не является функцией" });
 			return SemanticType::Undefined;
 		}
-		return node->data->returnedType;
+		return node->_data->returnedType;
 	}
-	if (node->data->type == SemanticType::ClassObj)
+	if (node->_data->type == SemanticType::ClassObj)
 	{
 		//todo проверить сответсвие обращения сигнатуре класса
 		//todo вернуть тип поля класса
 	}
-	return node->data->type;
+	return node->_data->type;
 }
 
-SemanticType SemanticTree::GetConstType(LexemaView lv, LexType lt)
+SemanticType SemanticTree::GetConstType(const LexemaView& lv, LexType lt) const
 {
 	switch (lt)
 	{
@@ -260,12 +278,12 @@ SemanticType SemanticTree::GetResultType(SemanticType a, SemanticType b, LexType
 	return SemanticType::ShortInt;
 }
 
-bool SemanticTree::IsEnableUnarySign(SemanticType type)
+bool SemanticTree::IsEnableUnarySign(SemanticType type) const
 {
 	if (type == SemanticType::LongInt || type == SemanticType::Float ||
 		type == SemanticType::ShortInt)
 		return true;
-	_sc->ErrorMsg(MSG_ID::SEM_ERR, { "С опреандом данного типа не совместимы унарные операции " });
+	SemanticExit( { "С опреандом данного типа не совместимы унарные операции " });
 	return false;
 }
 /// <summary>

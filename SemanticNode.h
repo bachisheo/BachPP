@@ -1,36 +1,35 @@
 #pragma once
-//#include "defs.h"
 #include "Scanner.h"
 class Node;
 struct Data {
 	SemanticType type = SemanticType::Undefined;
 	SemanticType returnedType = SemanticType::Empty;
 	LexemaView id;
-	Data(SemanticType semType,const LexemaView idView):type(semType)
+	Data(SemanticType semType, const LexemaView& idView) :type(semType)
 	{
-		strcpy_s(id, idView);
+		id = idView;
 	}
-	Data(const LexemaView idView, SemanticType semType):type(semType)
+	Data(const LexemaView& idView, SemanticType semType) :type(semType)
 	{
-		strcpy_s(id, idView);
+		id = idView;
 	}
-
 };
 
 class Node
 {
-	Node* _parent, * _child, * _neighbor;
+	Node* _parent = nullptr;
+	std::unique_ptr<Node> _child = nullptr, _neighbor = nullptr;
 public:
-	Data* data;
-	Node(Data * data);
+	Data* _data;
+	Node(Data data);
 	Node();
 	void SetParent(Node* parent);
-	Node* GetParent();
-	Node* AddChild(Node* child);
-	Node* GetChild();
-	Node* AddNeighbor(Node* neighbor);
-	Node* GetNeighbor();
+	Node* GetParent() const;
+	Node* AddChild(Data data);
+	Node* GetChild() const;
+	Node* AddNeighbor(Data data);
+	Node* GetNeighbor() const;
 
-	void Print();
+	void Print() const;
 };
 

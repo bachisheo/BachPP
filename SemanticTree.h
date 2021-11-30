@@ -1,44 +1,47 @@
-﻿#pragma once
+п»ї#pragma once
 #include "SemanticNode.h"
 class SemanticTree
 {
-	Node* _root;
+	std::unique_ptr<Node> _root;
 	Node* _current;
 	Scanner* _sc;
-	bool IsDataType(SemanticType type);
+	bool IsDataType(SemanticType type) const;
 public:
 	SemanticTree(Scanner* sc);
 	///
-	///Работа с элементами синтаксического дерева
+	///Р Р°Р±РѕС‚Р° СЃ СЌР»РµРјРµРЅС‚Р°РјРё СЃРёРЅС‚Р°РєСЃРёС‡РµСЃРєРѕРіРѕ РґРµСЂРµРІР°
 	///
-	void SemanticExit(std::vector<std::string> errMsg) const;
-	void SetParent(Node* parent);
+	void SemanticExit(const std::vector<std::string> & errMsg) const;
+	void SetParent(Node* parent) const;
 	Node* GetParent() const;
-	Node* AddChild(Node* child);
-	Node* AddNeighbor(Node* neighbor);
-	Node* GetNeighbor();
-	Node* FindUp(LexemaView id);
-	static Node* FindUp(Node* from, LexemaView id);
-	Node* FindChild(LexemaView id) const;
-	static Node* FindChild(Node* from, LexemaView id);
+	Node* AddChild(Data data) const;
+	Node* AddNeighbor(Data data);
+	Node* GetNeighbor() const;
+	Node* FindUp(const LexemaView& id) const;
+	static Node* FindUp(Node* from, const LexemaView& id);
+	Node* FindChild(const LexemaView& id) const;
+	static Node* FindChild(const Node* from, const LexemaView& id);
 
 	///
-	///семантические подпрограммы
+	///СЃРµРјР°РЅС‚РёС‡РµСЃРєРёРµ РїРѕРґРїСЂРѕРіСЂР°РјРјС‹
 	///
-	SemanticType GetType(LexType type_type, LexType next_type);
-	SemanticType GetType(LexType type_type, LexemaView type_view);
-	bool IsUnique(LexemaView lv);
-	//при обращении
-	SemanticType GetTypeByView(std::vector<char*> ids, bool isFunc = false);
-	SemanticType	GetConstType(LexemaView lv, LexType lt);
+	static SemanticType GetType(LexType type_type, LexType next_type);
+	SemanticType GetType(LexType type_type, const LexemaView& type_view) const;
+	bool IsUnique(const LexemaView& lv) const;
+	//РїСЂРё РѕР±СЂР°С‰РµРЅРёРё
+	SemanticType GetTypeByView(std::vector<LexemaView> & ids, bool isFunc = false) const;
+	SemanticType	GetConstType(const LexemaView& lv, LexType lt) const;
 	SemanticType GetResultType(SemanticType a, SemanticType b, LexType sign);
-	bool IsEnableUnarySign(SemanticType type);
+	bool IsEnableUnarySign(SemanticType type) const;
 	bool IsComparableType(SemanticType realType, SemanticType neededType);
-	//при описании переменных
-	Node* AddObject(LexemaView lv, SemanticType type);
-	Node* AddFunc(SemanticType returnedType, LexemaView funcName);
+	//РїСЂРё РѕРїРёСЃР°РЅРёРё РїРµСЂРµРјРµРЅРЅС‹С…
+	Node* AddObject(const LexemaView& lv, SemanticType type);
+	Node* AddObject(Data data);
+	Node* AddFunc(SemanticType returnedType, const LexemaView& funcName);
 	void SetTreePtr(Node* current);
-	Node* AddClass(LexemaView className);
-	Node* AddBlock();
-	Node* AddBlock(Node* parentNode);
+	Node* AddClass(const LexemaView& className);
+	Node* AddCompoundBlock();
+	Node* AddClassObject(const LexemaView& objName, const LexemaView& className);
+private:
+	Node* AddBlock(Data panetrData);
 };

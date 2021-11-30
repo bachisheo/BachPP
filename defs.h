@@ -1,20 +1,21 @@
 /*
-* Основные определения и константы, используемые в программе
+* РћСЃРЅРѕРІРЅС‹Рµ РѕРїСЂРµРґРµР»РµРЅРёСЏ Рё РєРѕРЅСЃС‚Р°РЅС‚С‹, РёСЃРїРѕР»СЊР·СѓРµРјС‹Рµ РІ РїСЂРѕРіСЂР°РјРјРµ
 */
+#pragma once
 #include <map>
-#include <fstream>
 #include <iostream>
 #include <vector>
 
 #ifndef DEFS
-#define LetterSmall(c) c >= 'a' && c <= 'z'
-#define LetterBig(c) c >= 'A' && c <= 'Z'
-#define Letter(c) (LetterBig(c)) || (LetterSmall(c))
-#define Digit(c) c >= '0' && c <= '9'
-#define NotDigit(c) (Letter(c)) || c == '_'
-#define MAX_LEX 10
-#define MAX_TEXT 10000
-typedef char LexemaView[MAX_LEX + 1];
+constexpr bool LetterSmall(char c) { return c >= 'a' && c <= 'z'; }
+constexpr bool LetterBig(char c) { return c >= 'A' && c <= 'Z'; }
+constexpr bool Letter(char c) {	return LetterBig(c) || LetterSmall(c);}
+constexpr bool Digit(char c) { return c >= '0' && c <= '9'; }
+constexpr bool NotDigit(char c) { return Letter(c) || c == '_'; }
+constexpr int MAX_LEX = 10;
+constexpr int MAX_TEXT = 10000;
+
+using LexemaView = std::string;
 
 enum class MSG_ID { LONG_LEX, WAIT_TYPE, SYNT_ERR, SEM_ERR };
 
@@ -42,7 +43,7 @@ enum class SyntType {
 	TOperator, TAssign, TBlock
 };
 //semantic types
-enum class SemanticType{Function, Class, ClassObj, Data, Empty, ShortInt, LongInt, Float, Undefined, NotType};
+enum class SemanticType { Function, Class, ClassObj, Data, Empty, ShortInt, LongInt, Float, Undefined, NotType };
 const std::vector<LexType> TypeWords{ LexType::Short, LexType::Long, LexType::Int, LexType::Float, LexType::Id };
 
 const std::map<std::string, LexType> KeyWords = {
