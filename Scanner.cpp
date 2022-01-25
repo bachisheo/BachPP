@@ -1,7 +1,7 @@
 #include "Scanner.h"
 
 #pragma warning(disable: 4996)
-LexType Scanner::ScanNumber(LexemaView lex, int& len) {
+LexType Scanner::ScanNumber(LexemaView & lex, int& len) {
 	for (; Digit(t[ptr]); ++ptr, ++len)
 		if (len < MAX_LEX) {
 			lex[len] = t[ptr];

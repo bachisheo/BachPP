@@ -12,16 +12,22 @@ constexpr bool LetterBig(char c) { return c >= 'A' && c <= 'Z'; }
 constexpr bool Letter(char c) {	return LetterBig(c) || LetterSmall(c);}
 constexpr bool Digit(char c) { return c >= '0' && c <= '9'; }
 constexpr bool NotDigit(char c) { return Letter(c) || c == '_'; }
-constexpr int MAX_LEX = 10;
+constexpr int MAX_LEX = 100;
 constexpr int MAX_TEXT = 10000;
-
 using LexemaView = std::string;
+
+/**
+ * \brief 
+ */
+# define MaxShort "32767"
+# define MaxLong "2147483647"
+
 
 enum class MSG_ID { LONG_LEX, WAIT_TYPE, SYNT_ERR, SEM_ERR };
 
 //lexical terminals
 enum class LexType {
-	While, Return, Class, Short, Long, Int, Float, main,
+	While, Return, Class, Short, Long, Int, Float, Void, main,
 	ConstInt, ConstExp,
 	Id,
 	Dot, DotComma, Comma, LRoundBracket, RRoundBracket, LFigBracket, RFigBracket,
@@ -43,7 +49,14 @@ enum class SyntType {
 	TOperator, TAssign, TBlock
 };
 //semantic types
-enum class SemanticType { Function, Class, ClassObj, Data, Empty, ShortInt, LongInt, Float, Undefined, NotType };
+struct SemanticType {
+	enum types { Function, Class, ClassObj, Data, Empty, ShortInt, LongInt, Float, Undefined, Void };
+	types type;
+	LexemaView id;
+	operator types() const { return type; } 
+	SemanticType(types t) { type = t; }
+	SemanticType() { type = Undefined; }
+};
 const std::vector<LexType> TypeWords{ LexType::Short, LexType::Long, LexType::Int, LexType::Float, LexType::Id };
 
 const std::map<std::string, LexType> KeyWords = {
@@ -54,6 +67,7 @@ const std::map<std::string, LexType> KeyWords = {
 	{"long", LexType::Long},
 	{"int", LexType::Int},
 	{"float", LexType::Float},
+	{"void", LexType::Void},
 	{"main", LexType::main}
 };
 const std::map<LexType, std::string> TypesName = {

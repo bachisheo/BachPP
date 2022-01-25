@@ -15,10 +15,12 @@ public :
 	//аксиома S
 	void Program(LexType endLex = LexType::End);
 	std::vector<Node*> userTypes;
+	void PrintSemanticTree(std::ostream& out);
 private:
 	SemanticTree* _tree;
 	Scanner* _sc;
 	LexType LookForward(size_t k = 1);
+	LexType LookForward(size_t k, LexemaView& lv);
 	bool CheckScan(LexType lex, LexemaView & lv,  bool needMsg = true);
 	bool CheckScan(LexType lex,  bool needMsg = true);
 	void LexExit(const std::vector<std::string>& waiting) const;

@@ -41,7 +41,7 @@ public:
 		return t;
 	}
 private:
-	LexType ScanNumber(LexemaView lex, int &len);
+	LexType ScanNumber(LexemaView & lex, int &len);
 	FILE *fin{};
 	int line;
 	int col;

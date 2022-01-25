@@ -7,6 +7,7 @@ class SemanticTree
 	Scanner* _sc;
 	bool IsDataType(SemanticType type) const;
 public:
+	void Print(std::ostream& out) const;
 	SemanticTree(Scanner* sc);
 	///
 	///Р Р°Р±РѕС‚Р° СЃ СЌР»РµРјРµРЅС‚Р°РјРё СЃРёРЅС‚Р°РєСЃРёС‡РµСЃРєРѕРіРѕ РґРµСЂРµРІР°
@@ -17,8 +18,13 @@ public:
 	Node* AddChild(Data data) const;
 	Node* AddNeighbor(Data data);
 	Node* GetNeighbor() const;
+	//РїРѕРёСЃРє РЅР° СѓСЂРѕРІРЅРµ
+	Node* FindUpOnLevel(const LexemaView& id) const;
 	Node* FindUp(const LexemaView& id) const;
+	static Node* FindUpOnLevel(Node* from, const LexemaView& id);
 	static Node* FindUp(Node* from, const LexemaView& id);
+	Node* FindCurrentFunc();
+	//РїРѕРёСЃРє СЃСЂРµРґРё РїРѕС‚РѕРјРєРѕРІ
 	Node* FindChild(const LexemaView& id) const;
 	static Node* FindChild(const Node* from, const LexemaView& id);
 

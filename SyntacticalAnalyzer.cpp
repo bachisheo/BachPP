@@ -1,5 +1,6 @@
 #include "SyntacticalAnalyzer.h"
 
+#include <functional>
 #include <utility>
 
 SyntacticalAnalyzer::SyntacticalAnalyzer(Scanner* sc) : _sc(sc)
@@ -11,41 +12,57 @@ void SyntacticalAnalyzer::Operator()
 {
 	auto nextLex = LookForward();
 	switch (nextLex) {
-		//Р±Р»РѕРє
+		//блок
 	case LexType::LFigBracket:
 	{
-		_sc->Scan();
 		auto ptr = _tree->AddCompoundBlock();
 		Block();
 		_tree->SetTreePtr(ptr);
 		break;
 	}
-	//while СЃ РїСЂРµРґСѓСЃР»РѕРІРёРµРј
-	case LexType::While:
+	//while с предусловием
+	case LexType::While: {
 		_sc->Scan();
 		CheckScan(LexType::LRoundBracket);
-		//СѓСЃР»РѕРІРёРµ
-		Expression();
+		//условие
+		auto type = Expression();
+		if (!_tree->IsComparableType(type, SemanticType::ShortInt))
+		{
+			_tree->SemanticExit({ "Недопустимое условие для 'while'"  });
+
+		};
 		CheckScan(LexType::RRoundBracket);
 		Operator();
 		break;
-		//РїСЂРёСЃРІР°РёРІР°РЅРёРµ 
+	}
+		//присваивание 
 	case LexType::Id:
 	{
 		auto name = GetFullName();
 		auto varType = _tree->GetTypeByView(name);
 		CheckScan(LexType::Equal);
 		auto valueType = Expression();
-		_tree->IsComparableType(valueType, varType);
+		if(!_tree->IsComparableType(valueType, varType))
+		{
+			_tree->SemanticExit({ "Тип присваемого значения не соответсвует типу переменной" });
+
+		};
 		CheckScan(LexType::DotComma);
 		break;
 	}
-	case LexType::Return:
+	case LexType::Return: {
 		_sc->Scan();
-		Expression();
+		auto returnedType = Expression();
+		auto func = _tree->FindCurrentFunc();
+		func->_data->is_has_return_value = true;
+		if (!_tree->IsComparableType(returnedType ,func->_data->returned_type) )
+		{
+			_tree->SemanticExit({ "Тип возвращаемого значения не соответсвует объявленному" });
+		}
 		CheckScan(LexType::DotComma);
 		break;
-	default:;
+	}
+	default:_tree->SemanticExit({ "Ошибочная операция" });;
 	}
 }
 // --{ declInFunc } --
@@ -56,16 +73,21 @@ void SyntacticalAnalyzer::Block()
 	CheckScan(LexType::RFigBracket);
 }
 
-//РїСЂРѕСЃРєР°РЅРёСЂРѕРІР°С‚СЊ РЅР° k СЃРёРјРІРѕР»РѕРІ РІРїРµСЂРµРґ Р±РµР· 
-//РёР·РјРµРЅРµРЅРёСЏ СѓРєР°Р·Р°С‚РµР»РµР№ СЃРєР°РЅРµСЂР°
+//просканировать на k символов вперед без 
+//изменения указателей сканера
 LexType SyntacticalAnalyzer::LookForward(size_t k)
+{
+	LexemaView lv;
+	return LookForward(k, lv);
+}
+LexType SyntacticalAnalyzer::LookForward(size_t k, LexemaView & lv)
 {
 	int _ptr, _col, _line;
 	_sc->GetPtrs(_ptr, _line, _col);
 	LexType lex = LexType::End;
 	for (size_t i = 0; i < k; i++)
 	{
-		lex = _sc->Scan();
+		lex = _sc->Scan(lv);
 		if (lex == LexType::End)
 			break;
 	}
@@ -73,8 +95,8 @@ LexType SyntacticalAnalyzer::LookForward(size_t k)
 	return lex;
 }
 
-//СЃС‡РёС‚С‹РІР°РµС‚ Р»РµРєСЃРµРјСѓ Рё РІРѕР·РІСЂР°С‰Р°РµС‚ СѓРєР°Р·Р°С‚РµР»СЊ РЅР° РїСЂРµР¶РЅРµРµ РјРµСЃС‚Рѕ,
-//РµСЃР»Рё Р»РµРєСЃРµРјР° РЅРµ СЂР°РІРЅР° Р·Р°РґР°РЅРЅРѕР№
+//считывает лексему и возвращает указатель на прежнее место,
+//если лексема не равна заданной
 bool SyntacticalAnalyzer::CheckScan(LexType neededLex, LexemaView& lv, bool needMsg)
 {
 	int _ptr, _col, _line;
@@ -94,7 +116,7 @@ bool SyntacticalAnalyzer::CheckScan(LexType neededLex, bool needMsg)
 	return CheckScan(neededLex, lv, needMsg);
 }
 
-//РџРѕР»СѓС‡РёС‚СЊ РїРѕР»РЅРѕРµ РїСЂРё РѕР±СЂР°С‰РµРЅРёРё РІРёРґР° a.b.c...
+//Получить полное при обращении вида a.b.c...
 std::vector<LexemaView> SyntacticalAnalyzer::GetFullName()
 {
 	auto ids = std::vector<LexemaView>();
@@ -128,6 +150,8 @@ void SyntacticalAnalyzer::ClassDeclarate()
 	std::vector<LexType> ltsAfterProgramm = { LexType::RFigBracket, LexType::DotComma };
 	CheckScan(LexType::Class);
 	CheckScan(LexType::Id, className);
+	CheckScan(LexType::LFigBracket);
+
 	const auto ptr = _tree->AddClass(className);
 	Program(LexType::RFigBracket);
 	_tree->SetTreePtr(ptr);
@@ -225,17 +249,17 @@ SemanticType SyntacticalAnalyzer::ElementaryExpression()
 	case LexType::Id: {
 		auto ids = GetFullName();
 		lexType = LookForward();
-		//РµСЃР»Рё РїСЂРѕРёСЃС…РѕРґРёС‚ РІС‹Р·РѕРІ С„СѓРЅРєС†РёРё
+		//если происходит вызов функции
 		if (lexType == LexType::LRoundBracket) {
 			_sc->Scan();
-			//РїСЂРѕРІРµСЂРёС‚СЊ, РµСЃС‚СЊ Р»Рё С‚Р°РєР°СЏ С„СѓРЅРєС†РёСЏ Рё РІРµСЂРЅСѓС‚СЊ РµРµ С‚РёРї
+			//проверить, есть ли такая функция и вернуть ее тип
 			result = _tree->GetTypeByView(ids, true);
 			CheckScan(LexType::RRoundBracket);
 		}
 		else
-			//РїСЂРё РѕР±СЂР°С‰РµРЅРёРё Рє РїРµСЂРµРјРµРЅРЅРѕР№
+			//при обращении к переменной
 		{
-			//РїСЂРѕРІРµСЂРёС‚СЊ, РµСЃС‚СЊ Р»Рё С‚Р°РєР°СЏ РїРµСЂРµРјРµРЅРЅР°СЏ Рё РІРµСЂРЅСѓС‚СЊ РµРµ С‚РёРї
+			//проверить, есть ли такая переменная и вернуть ее тип
 			result = _tree->GetTypeByView(ids);
 		}
 		break;
@@ -265,8 +289,9 @@ void SyntacticalAnalyzer::Program(LexType endLex)
 		else {
 			int _ptr, _col, _line;
 			_sc->GetPtrs(_ptr, _line, _col);
-			Type();
-			//РїРѕР»СѓС‡РёС‚СЊ СЃР»РµРґСѓСЋС‰СѓСЋ Р·Р° id Р»РµРєСЃРµРјСѓ
+			LexemaView typeView;
+			Type(typeView);
+			//получить следующую за id лексему
 			nextLex = LookForward(2);
 			_sc->SetPtrs(_ptr, _line, _col);
 			if (nextLex == LexType::LRoundBracket)
@@ -278,11 +303,18 @@ void SyntacticalAnalyzer::Program(LexType endLex)
 	}
 }
 
+void SyntacticalAnalyzer::PrintSemanticTree(std::ostream& out)
+{
+	_tree->Print(out);
+}
+
 void SyntacticalAnalyzer::LexExit(const std::vector<std::string>& waiting) const
 {
 	_sc->ErrorMsg(MSG_ID::SYNT_ERR, waiting);
 	exit(1);
 }
+
+
 void SyntacticalAnalyzer::LexExit(LexType waitingLex) const
 {
 	LexExit({ TypesName.find(waitingLex)->second });
@@ -296,30 +328,45 @@ void SyntacticalAnalyzer::LexExit(LexType waitingLex) const
 void SyntacticalAnalyzer::DeclarateInFunction()
 {
 	LexType endLex = LexType::RFigBracket;
-	LexType nextLex = LookForward();
+	LexemaView lv;
+	LexType nextLex = LookForward(1, lv);
 	while (nextLex != endLex) {
 		if (nextLex == LexType::Class) {
 			ClassDeclarate();
 		}
-		else
-			if (std::find(TypeWords.begin(), TypeWords.end(), nextLex) != TypeWords.end())
-				Data();
-			else Operator();
+		else {
+			
+			auto it = std::find(TypeWords.begin(), TypeWords.end(), nextLex);
+			if (it == TypeWords.end() || 
+				(*it == LexType::Id && LookForward(2) != LexType::Id))
+			{
+				Operator();
+			}
+			else Data();
+		}
 		nextLex = LookForward();
 	}
 }
+
+
 //---type   |--id    --|() block
 //          |--main  --|
 void SyntacticalAnalyzer::FunctionDeclarate()
 {
-	auto type = Type();
-	LexemaView funcName;
-	if (!CheckScan(LexType::main, funcName, false))
-		CheckScan(LexType::Id, funcName);
-	auto ptr = _tree->AddFunc(type, funcName);
+	LexemaView funcView, typeView;
+
+	auto type = Type(typeView);
+	type.id = typeView;
+	if (!CheckScan(LexType::main, funcView, false))
+		CheckScan(LexType::Id, funcView);
+	auto ptr = _tree->AddFunc(type, funcView);
 	CheckScan(LexType::LRoundBracket);
 	CheckScan(LexType::RRoundBracket);
 	Block();
+	if(ptr->_data->is_has_return_value == false && ptr->_data->returned_type != SemanticType::Void)
+	{
+		_tree->SemanticExit({ funcView,  " должна возвращать значение" });
+	}
 	_tree->SetTreePtr(ptr);
 }
 //type var |;
@@ -333,22 +380,37 @@ void SyntacticalAnalyzer::Data()
 	if (LookForward() == LexType::Equal) {
 		_sc->Scan();
 		auto valueType = Expression();
-		_tree->IsComparableType(varType, valueType);
+		if(!_tree->IsComparableType(varType, valueType))
+		{
+			_tree->SemanticExit({ " Ошибка приведения типов" });
+		}
 	}
-	
+	if (varType == SemanticType::ClassObj)
+	{
+		_tree->AddClassObject(objName, typeView);
+	}
+	else {
+		_tree->IsUnique(objName);
+		_tree->AddObject(objName, varType);
+	}
 	while (LookForward() == LexType::Comma) {
 		_sc->Scan();
 		CheckScan(LexType::Id, objName);
 		if (LookForward() == LexType::Equal) {
 			_sc->Scan();
 			auto valueType = Expression();
-			_tree->IsComparableType(varType, valueType);
+			if (!_tree->IsComparableType(varType, valueType))
+			{
+				_tree->SemanticExit({ "Несоответсвие типов" });
+			}
 		}
 		if (varType == SemanticType::ClassObj)
 		{
 			_tree->AddClassObject(objName, typeView);
 		}
 		else {
+			_tree->IsUnique(objName);
+
 			_tree->AddObject(objName, varType);
 		}
 	}
