@@ -4,9 +4,14 @@
 Data::Data(SemanticType semType, const LexemaView& idView) :data_type(semType), id(idView)
 {}
 
-Node::Node(Data data)
+FunctionData::FunctionData(SemanticType return_type, const LexemaView& id): Data(SemanticType::Function, id)
 {
-	_data = new Data(data);
+	returned_type = return_type;
+}
+
+Node::Node(Data * data)
+{
+	_data = data;
 }
 Node::Node()
 {
@@ -28,7 +33,7 @@ Node* Node::SetChild(Node* child)
 	_child = child;
 	return _child;
 }
-Node* Node::AddChild(Data data)
+Node* Node::AddChild(Data * data)
 {
 	if (_child == nullptr) {
 		_child = new Node(data);
@@ -44,7 +49,7 @@ Node* Node::GetChild() const
 	return _child;
 }
 
-Node* Node::AddNeighbor(Data data)
+Node* Node::AddNeighbor(Data * data)
 {
 	Node* current = this;
 	while (current->_neighbor != nullptr)
@@ -64,7 +69,7 @@ void Node::Print(std::ostream& out, int tab_count) const
 	out << "\n";
 	for (int i = 0; i < tab_count; i++)
 		out << '\t';
-	out << "Node: " << *this;
+	out << "[" << * this << "]";
 	if (_child)
 	{
 		for (int i = 0; i < tab_count; i++)
@@ -80,6 +85,8 @@ void Node::Print(std::ostream& out, int tab_count) const
 
 std::ostream& operator<<(std::ostream& out, const Node& node)
 {
-	out << "Type: " << node._data->data_type.id << ", name: " << node._data->id;
+	auto typeName = TypesName.find(node._data->data_type.type)->second;
+	out << "Type: " << typeName;
+		out << ", name: " << node._data->id;
 	return out;
 }

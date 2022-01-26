@@ -5,17 +5,25 @@ union DataValue
 {
 	short int short_int_value;
 	float float_value;
-	int long_int_value;
 };
 
-struct Data {
+struct Data{
+	public:
 	SemanticType data_type = SemanticType::Undefined;
-	SemanticType returned_type = SemanticType::Empty;
-	DataValue data_value;
-	bool is_has_return_value = false;
 	LexemaView id;
+	DataValue data_value;
 	Data(SemanticType semType, const LexemaView& idView);
+	virtual ~Data() = default;
 };
+
+struct FunctionData : Data
+{
+	bool is_return_operator_declarated = false;
+	SemanticType returned_type = SemanticType::Empty;
+	Data* returned_data;
+	FunctionData(SemanticType return_type, const LexemaView& id);
+};
+
 
 class Node
 {
@@ -24,13 +32,13 @@ class Node
 	std::unique_ptr<Node> _neighbor = nullptr;
 public:
 	Data* _data;
-	Node(Data data);
+	Node(Data * data);
 	Node();
 	void SetParent(Node* parent);
 	Node* GetParent() const;
-	Node* AddChild(Data data);
+	Node* AddChild(Data * data);
 	Node* GetChild() const;
-	Node* AddNeighbor(Data data);
+	Node* AddNeighbor(Data * data);
 	Node* GetNeighbor() const;
 	Node* SetChild(Node* child);
 

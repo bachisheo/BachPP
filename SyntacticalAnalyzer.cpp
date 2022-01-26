@@ -53,9 +53,9 @@ void SyntacticalAnalyzer::Operator()
 	case LexType::Return: {
 		_sc->Scan();
 		auto returnedType = Expression();
-		auto func = _tree->FindCurrentFunc();
-		func->_data->is_has_return_value = true;
-		if (!_tree->IsComparableType(returnedType ,func->_data->returned_type) )
+		auto function_data = dynamic_cast<FunctionData*>(_tree->FindCurrentFunc()->_data);
+		function_data->is_return_operator_declarated = true;
+		if (!_tree->IsComparableType(returnedType, function_data->returned_type))
 		{
 			_tree->SemanticExit({ "Тип возвращаемого значения не соответсвует объявленному" });
 		}
@@ -317,7 +317,7 @@ void SyntacticalAnalyzer::LexExit(const std::vector<std::string>& waiting) const
 
 void SyntacticalAnalyzer::LexExit(LexType waitingLex) const
 {
-	LexExit({ TypesName.find(waitingLex)->second });
+	LexExit({ LexTypesName.find(waitingLex)->second });
 
 }
 //  
@@ -354,20 +354,20 @@ void SyntacticalAnalyzer::DeclarateInFunction()
 void SyntacticalAnalyzer::FunctionDeclarate()
 {
 	LexemaView funcView, typeView;
-
-	auto type = Type(typeView);
-	type.id = typeView;
+	auto returned_type = Type(typeView);
+	returned_type.id = typeView;
 	if (!CheckScan(LexType::main, funcView, false))
 		CheckScan(LexType::Id, funcView);
-	auto ptr = _tree->AddFunc(type, funcView);
+	auto func_node = _tree->AddFunc(returned_type, funcView);
+	auto func_data = dynamic_cast<FunctionData*>(func_node->_data);
 	CheckScan(LexType::LRoundBracket);
 	CheckScan(LexType::RRoundBracket);
 	Block();
-	if(ptr->_data->is_has_return_value == false && ptr->_data->returned_type != SemanticType::Void)
+	if(func_data->is_return_operator_declarated == false && func_data->returned_type != SemanticType::Void)
 	{
 		_tree->SemanticExit({ funcView,  " должна возвращать значение" });
 	}
-	_tree->SetTreePtr(ptr);
+	_tree->SetTreePtr(func_node);
 }
 //type var |;
 //         |, var...;

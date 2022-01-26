@@ -196,7 +196,7 @@ void Scanner::ScanAll()
 	do {
 		LexemaView lex;
 		res = Scan(lex);
-		std::cout << TypesName.find(res)->second << " --> " << lex << "\n";
+		std::cout << LexTypesName.find(res)->second << " --> " << lex << "\n";
 	} while (res != LexType::End);
 }
 

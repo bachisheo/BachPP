@@ -2,7 +2,7 @@
 #include "SemanticNode.h"
 class SemanticTree
 {
-	std::unique_ptr<Node> _root;
+	Node * _root;
 	Node* _current;
 	Scanner* _sc;
 	bool IsDataType(SemanticType type) const;
@@ -15,8 +15,7 @@ public:
 	void SemanticExit(const std::vector<std::string> & errMsg) const;
 	void SetParent(Node* parent) const;
 	Node* GetParent() const;
-	Node* AddChild(Data data) const;
-	Node* AddNeighbor(Data data);
+	Node* AddNeighbor(Data* data);
 	Node* GetNeighbor() const;
 	//РїРѕРёСЃРє РЅР° СѓСЂРѕРІРЅРµ
 	Node* FindUpOnLevel(const LexemaView& id) const;
@@ -42,12 +41,12 @@ public:
 	bool IsComparableType(SemanticType realType, SemanticType neededType);
 	//РїСЂРё РѕРїРёСЃР°РЅРёРё РїРµСЂРµРјРµРЅРЅС‹С…
 	Node* AddObject(const LexemaView& lv, SemanticType type);
-	Node* AddObject(Data data);
+	Node* AddObject(Data * data);
 	Node* AddFunc(SemanticType returnedType, const LexemaView& funcName);
 	void SetTreePtr(Node* current);
 	Node* AddClass(const LexemaView& className);
 	Node* AddCompoundBlock();
 	Node* AddClassObject(const LexemaView& objName, const LexemaView& className);
 private:
-	Node* AddBlock(Data panetrData);
+	Node* AddBlock(Data * panetrData);
 };

@@ -19,7 +19,7 @@ SemanticTree::SemanticTree(Scanner* sc) :_sc(sc)
 
 Node* SemanticTree::AddObject(const LexemaView& lv, SemanticType type)
 {
-	return AddObject({ type, lv });
+	return AddObject(new Data(type, lv));
 }
 Node* SemanticTree::AddClassObject(const LexemaView& objName, const LexemaView& className)
 {
@@ -31,17 +31,17 @@ Node* SemanticTree::AddClassObject(const LexemaView& objName, const LexemaView& 
 	IsUnique(objName);
 	SemanticType type = SemanticType::ClassObj;
 	type.id = className;
-	auto obj = AddObject({ type,  objName });
+	auto obj = AddObject(new Data(type,  objName));
 	obj->SetChild(classDeclaration->GetChild());
 	return obj;
 }
-Node* SemanticTree::AddObject(Data data)
+Node* SemanticTree::AddObject(Data * data)
 {
 
 	if (_root == nullptr)
 	{
-		_root = std::make_unique<Node>(data);
-		_current = _root.get();
+		_root = new Node(data);
+		_current = _root;
 	}
 	else
 	{
@@ -53,9 +53,7 @@ Node* SemanticTree::AddObject(Data data)
 Node* SemanticTree::AddFunc(SemanticType returnedType, const LexemaView& funcName)
 {
 	IsUnique(funcName);
-	Data funcData = { SemanticType::Function, funcName };
-	funcData.returned_type = returnedType;
-	return AddBlock(funcData);
+	return AddBlock(new FunctionData(returnedType, funcName));
 }
 
 void SemanticTree::SetTreePtr(Node* current)
@@ -68,18 +66,18 @@ Node* SemanticTree::AddClass(const LexemaView& className)
 	IsUnique(className);
 	SemanticType type = SemanticType::Class;
 	type.id = className;
-	return AddBlock({ type, className });
+	return AddBlock(new Data(type, className ));
 }
 
 Node* SemanticTree::AddCompoundBlock()
 {
-	return AddBlock({ SemanticType::Empty, "emptyNode" });
+	return AddBlock(new Data(SemanticType::Empty, "emptyNode"));
 }
 
-Node* SemanticTree::AddBlock(Data parentData)
+Node* SemanticTree::AddBlock(Data * parentData)
 {
 	Node* parent = AddObject(parentData);
-	_current = parent->AddChild({  SemanticType::Empty, "emptyNode" });
+	_current = parent->AddChild(new Data( SemanticType::Empty, "emptyNode"));
 	return parent;
 }
 
@@ -99,7 +97,7 @@ Node* SemanticTree::GetParent() const
 	return _current->GetParent();
 }
 
-Node* SemanticTree::AddNeighbor(Data data)
+Node* SemanticTree::AddNeighbor(Data * data)
 {
 	_current = _current->AddNeighbor(data);
 	return _current;
@@ -155,12 +153,12 @@ Node* SemanticTree::FindUp(Node* from, const LexemaView& id)
 
 Node* SemanticTree::FindCurrentFunc()
 {
-	auto empt = _current;
+	auto func_node = _current;
 
-	while (empt->_data->data_type != SemanticType::Function) {
-		empt = empt->GetParent();
+	while (func_node->_data->data_type != SemanticType::Function) {
+		func_node = func_node->GetParent();
 	}
-	return empt;
+	return func_node;
 }
 
 Node* SemanticTree::FindChild(const LexemaView& id) const
@@ -273,7 +271,7 @@ SemanticType SemanticTree::GetTypeByView(std::vector<LexemaView>& ids, bool isFu
 			SemanticExit({ "Объект с именем \'", StringNameByView(ids), "\' не является функцией" });
 			return SemanticType::Undefined;
 		}
-		return node->_data->returned_type;
+		return static_cast<FunctionData*>(node->_data)->returned_type;
 	}
 	return node->_data->data_type;
 }
