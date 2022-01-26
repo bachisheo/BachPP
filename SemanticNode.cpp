@@ -1,12 +1,23 @@
 #include "SemanticNode.h"
 
 
-Data::Data(SemanticType semType, const LexemaView& idView) :data_type(semType), id(idView)
+Data::Data(SemanticType semType, const LexemaView& idView) :type(semType), id(idView)
 {}
 
+Node::~Node()
+{
+	delete _child;
+	delete _neighbor;
+	delete _data;
+}
 FunctionData::FunctionData(SemanticType return_type, const LexemaView& id): Data(SemanticType::Function, id)
 {
 	returned_type = return_type;
+}
+
+FunctionData::~FunctionData()
+{
+	delete returned_data;
 }
 
 Node::Node(Data * data)
@@ -53,15 +64,15 @@ Node* Node::AddNeighbor(Data * data)
 {
 	Node* current = this;
 	while (current->_neighbor != nullptr)
-		current = current->_neighbor.get();
-	current->_neighbor = std::make_unique<Node>(data);
+		current = current->_neighbor;
+	current->_neighbor = new Node(data);
 	current->_neighbor->_parent = current;
-	return  current->_neighbor.get();
+	return  current->_neighbor;
 }
 
 Node* Node::GetNeighbor() const
 {
-	return _neighbor.get();
+	return _neighbor;
 }
 
 void Node::Print(std::ostream& out, int tab_count) const
@@ -85,7 +96,7 @@ void Node::Print(std::ostream& out, int tab_count) const
 
 std::ostream& operator<<(std::ostream& out, const Node& node)
 {
-	auto typeName = TypesName.find(node._data->data_type.type)->second;
+	auto typeName = TypesName.find(node._data->type.type)->second;
 	out << "Type: " << typeName;
 		out << ", name: " << node._data->id;
 	return out;

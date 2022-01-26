@@ -21,16 +21,16 @@ private:
 	Scanner* _sc;
 	LexType LookForward(size_t k = 1);
 	LexType LookForward(size_t k, LexemaView& lv);
-	bool CheckScan(LexType lex, LexemaView & lv,  bool needMsg = true);
-	bool CheckScan(LexType lex,  bool needMsg = true);
+	bool ScanAndCheck(LexType lex, LexemaView & lv,  bool needMsg = true);
+	bool ScanAndCheck(LexType lex,  bool needMsg = true);
 	void LexExit(const std::vector<std::string>& waiting) const;
 	void LexExit(LexType waitingLex) const;
-	void DeclarateInFunction();
-	void FunctionDeclarate();
-	void Data();
+	void DeclareInFunction();
+	void FunctionDeclare();
+	void DataDeclare();
 	std::vector<LexemaView> GetFullName();
-	SemanticType Type(LexemaView& lv) const;
-	void ClassDeclarate();
+	SemanticType ScanType(LexemaView& lv) const;
+	void ClassDeclare();
 	SemanticType Expression();
 	SemanticType LogicalExpression();
 	SemanticType ShiftExpression();
@@ -38,6 +38,6 @@ private:
 	SemanticType MultExpression();
 	SemanticType ElementaryExpression();
 	void Operator();
-	void Block();
+	void CompoundBlock();
 };
 

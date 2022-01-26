@@ -4,7 +4,6 @@
 bool SemanticTree::IsDataType(SemanticType type) const
 {
 	return (type == SemanticType::LongInt || type == SemanticType::ShortInt || type == SemanticType::Float);
-
 }
 
 void SemanticTree::Print(std::ostream& out) const
@@ -151,14 +150,25 @@ Node* SemanticTree::FindUp(Node* from, const LexemaView& id)
 	return par;
 }
 
-Node* SemanticTree::FindCurrentFunc()
+Node* SemanticTree::FindCurrentFunc() const
 {
 	auto func_node = _current;
 
-	while (func_node->_data->data_type != SemanticType::Function) {
+	while (func_node->_data->type != SemanticType::Function) {
 		func_node = func_node->GetParent();
 	}
 	return func_node;
+}
+
+bool SemanticTree::IsInOperator() const
+{
+	auto prev_node = _current;
+
+	//if(prev_node->_data->data_type = )
+	while (prev_node->_data->type != SemanticType::Function) {
+		prev_node = prev_node->GetParent();
+	}
+	return prev_node;
 }
 
 Node* SemanticTree::FindChild(const LexemaView& id) const
@@ -205,13 +215,13 @@ SemanticType SemanticTree::GetType(LexType type_type, const LexemaView& type_vie
 		auto nod = FindUp(type_view);
 		if (nod != nullptr)
 		{
-			if (nod->_data->data_type == SemanticType::Class) {
+			if (nod->_data->type == SemanticType::Class) {
 				SemanticType type = SemanticType::ClassObj;
 				type.id = type_view;
 				return type;
 			}
 		}
-		SemanticExit({ "Тип \'" , type_view, "\' не определен" });
+		
 		return SemanticType::Undefined;
 	}
 	default:
@@ -253,7 +263,7 @@ SemanticType SemanticTree::GetTypeByView(std::vector<LexemaView>& ids, bool isFu
 		SemanticExit({ "Объекта с именем \'", ids[0], "\' не существует" });
 		return SemanticType::Undefined;
 	}
-	if (node->_data->data_type == SemanticType::ClassObj)
+	if (node->_data->type == SemanticType::ClassObj)
 	{
 		for (size_t i = 1; i < ids.size() && node != nullptr; i++)
 		{
@@ -266,14 +276,14 @@ SemanticType SemanticTree::GetTypeByView(std::vector<LexemaView>& ids, bool isFu
 	}
 	if (isFunc)
 	{
-		if (node->_data->data_type != SemanticType::Function)
+		if (node->_data->type != SemanticType::Function)
 		{
 			SemanticExit({ "Объект с именем \'", StringNameByView(ids), "\' не является функцией" });
 			return SemanticType::Undefined;
 		}
 		return static_cast<FunctionData*>(node->_data)->returned_type;
 	}
-	return node->_data->data_type;
+	return node->_data->type;
 }
 int numberStrCmp(std::string a, std::string b)
 {

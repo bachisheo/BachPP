@@ -22,7 +22,8 @@ public:
 	Node* FindUp(const LexemaView& id) const;
 	static Node* FindUpOnLevel(Node* from, const LexemaView& id);
 	static Node* FindUp(Node* from, const LexemaView& id);
-	Node* FindCurrentFunc();
+	Node* FindCurrentFunc() const;
+	bool IsInOperator() const;
 	//РїРѕРёСЃРє СЃСЂРµРґРё РїРѕС‚РѕРјРєРѕРІ
 	Node* FindChild(const LexemaView& id) const;
 	static Node* FindChild(const Node* from, const LexemaView& id);
