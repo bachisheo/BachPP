@@ -59,6 +59,19 @@ struct SemanticType {
 };
 const std::vector<LexType> TypeWords{ LexType::Short, LexType::Long, LexType::Int, LexType::Float, LexType::Id };
 
+const std::map<SemanticType::types, std::string> TypesName = {
+	{SemanticType::types::Class, "class"},
+	{SemanticType::types::ClassObj, "classObj"},
+	{SemanticType::types::Data, "data"},
+	{SemanticType::types::Empty, "empty"},
+	{SemanticType::types::Float, "float"},
+	{SemanticType::types::Function, "function"},
+	{SemanticType::types::LongInt, "long integer"},
+	{SemanticType::types::ShortInt, "short integer"},
+	{SemanticType::types::Undefined, "undefined"},
+	{SemanticType::types::Void, "void"}
+};
+
 const std::map<std::string, LexType> KeyWords = {
 	{"while", LexType::While},
 	{"return", LexType::Return},
@@ -70,7 +83,8 @@ const std::map<std::string, LexType> KeyWords = {
 	{"void", LexType::Void},
 	{"main", LexType::main}
 };
-const std::map<LexType, std::string> TypesName = {
+
+const std::map<LexType, std::string> LexTypesName = {
 	{LexType::main, "main"},
 	{LexType::While, "while"},
 	{LexType::Return, "return"},
