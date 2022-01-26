@@ -64,7 +64,7 @@ void SyntacticalAnalyzer::Operator()
 		else
 		{
 			_sc->SetPtrs(a, b, c);
-		}
+		} 
 		//присваивание 
 		auto valueType = Expression();
 		if (needed != SemanticType::Undefined && 
@@ -374,13 +374,16 @@ void SyntacticalAnalyzer::FunctionDeclare()
 {
 	LexemaView func_name, type_view;
 	auto returned_type = ScanType(type_view);
-	if (returned_type == SemanticType::Undefined)
+	if (returned_type == SemanticType::Undefined) {
 		_tree->SemanticExit({ "Тип \'" , type_view, "\' не определен" });
+	}
 	returned_type.id = type_view;
 	if (!ScanAndCheck(LexType::main, func_name, false))
 		ScanAndCheck(LexType::Id, func_name);
+	//create node in tree, save ptr
 	auto func_node = _tree->AddFunc(returned_type, func_name);
 	auto func_data = dynamic_cast<FunctionData*>(func_node->_data);
+
 	ScanAndCheck(LexType::LRoundBracket);
 	ScanAndCheck(LexType::RRoundBracket);
 	CompoundBlock();
@@ -392,6 +395,11 @@ void SyntacticalAnalyzer::FunctionDeclare()
 }
 //type var |;
 //         |, var...;
+void PrintUpdate(std::string _event, SemanticTree * tree)
+{
+	std::cout << "\n\n" << _event;
+	tree->Print(std::cout);
+}
 void SyntacticalAnalyzer::DataDeclare()
 {
 	LexemaView type_view, var_name;
@@ -416,6 +424,8 @@ void SyntacticalAnalyzer::DataDeclare()
 		_tree->IsUnique(var_name);
 		_tree->AddObject(var_name, current_type);
 	}
+
+
 	while (LookForward() == LexType::Comma) {
 		_sc->Scan();
 		ScanAndCheck(LexType::Id, var_name);

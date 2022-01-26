@@ -5,17 +5,22 @@ union DataValue
 {
 	short int short_int_value;
 	float float_value;
+	Node* object_of_class;
 };
 /// <summary>
-/// Структура, хранящаяся в узле дерева
+/// Структура, описывающая содержимое узла дерева
 /// </summary>
 struct Data{
+private:
 	public:
 	SemanticType type = SemanticType::Undefined;
 	LexemaView id;
 	DataValue value;
 	Data(SemanticType semType, const LexemaView& idView);
-	virtual ~Data() = default;
+	virtual LexemaView GetValueView() const;
+	virtual ~Data();
+	virtual Data * Clone() const;
+	
 };
 /// <summary>
 /// Структура для узла с описанием функции
@@ -26,6 +31,8 @@ struct FunctionData : Data
 	SemanticType returned_type = SemanticType::Empty;
 	Data* returned_data;
 	FunctionData(SemanticType return_type, const LexemaView& id);
+	LexemaView GetValueView() const override ;
+	FunctionData * Clone() const override;
 	~FunctionData() override;
 };
 
@@ -44,6 +51,7 @@ public:
 	Node* AddChild(Data * data);
 	Node* GetChild() const;
 	Node* AddNeighbor(Data * data);
+	Node* SetNeighbor(Node * node);
 	Node* GetNeighbor() const;
 	Node* SetChild(Node* child);
 	void Print(std::ostream& out, int tab_count) const;
@@ -53,3 +61,4 @@ public:
 
 
 std::ostream & operator<<(std::ostream & out, const Node & node);
+std::ostream & operator<<(std::ostream & out, const Data & data);

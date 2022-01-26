@@ -48,6 +48,7 @@ public:
 	Node* AddClass(const LexemaView& className);
 	Node* AddCompoundBlock();
 	Node* AddClassObject(const LexemaView& objName, const LexemaView& className);
+	static Node* CopySubtree(Node* sub_root);
 private:
 	Node* AddBlock(Data * panetrData);
 };

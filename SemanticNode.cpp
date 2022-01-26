@@ -1,8 +1,39 @@
 #include "SemanticNode.h"
 
+#include <string>
+
 
 Data::Data(SemanticType semType, const LexemaView& idView) :type(semType), id(idView)
-{}
+{
+	switch (type)
+	{
+	case SemanticType::Float: value.float_value = 3.14f; break;
+	case SemanticType::ShortInt: value.short_int_value = 1; break;
+	}
+}
+LexemaView Data::GetValueView() const
+{
+	LexemaView view = "Undefined";
+	switch (type)
+	{
+	case SemanticType::Float: view = std::to_string(value.float_value); break;
+	case SemanticType::ShortInt: view = std::to_string(value.short_int_value); break;
+	case SemanticType::ClassObj: view = "";  view.append("object of the \" " + type.id + "\" class");
+	}
+	return view;
+}
+
+Data::~Data()
+{
+	if (value.object_of_class != nullptr)
+		delete value.object_of_class;
+}
+
+Data* Data::Clone() const
+{
+	Data* clone = new Data(type, this->id);
+	return clone;
+}
 
 Node::~Node()
 {
@@ -13,6 +44,24 @@ Node::~Node()
 FunctionData::FunctionData(SemanticType return_type, const LexemaView& id): Data(SemanticType::Function, id)
 {
 	returned_type = return_type;
+	returned_data = new Data(returned_type, "");
+}
+
+LexemaView FunctionData::GetValueView() const
+{
+	
+	std::string result = "[type: ";
+	result += TypesName.find(returned_type)->second;
+	result += ", value: ";
+	result += returned_data->GetValueView();
+	result += "]";
+	return result;
+}
+
+FunctionData* FunctionData::Clone() const
+{
+	FunctionData * clone = new FunctionData(returned_type, id);
+	return clone;
 }
 
 FunctionData::~FunctionData()
@@ -41,7 +90,10 @@ Node* Node::GetParent() const
 
 Node* Node::SetChild(Node* child)
 {
+	if (child == nullptr)
+		return  nullptr;
 	_child = child;
+	child->SetParent(this);
 	return _child;
 }
 Node* Node::AddChild(Data * data)
@@ -62,10 +114,16 @@ Node* Node::GetChild() const
 
 Node* Node::AddNeighbor(Data * data)
 {
+		return  SetNeighbor(new Node(data));
+}
+Node* Node::SetNeighbor(Node * neighbor)
+{
+	if (neighbor == nullptr)
+		return  nullptr;
 	Node* current = this;
 	while (current->_neighbor != nullptr)
 		current = current->_neighbor;
-	current->_neighbor = new Node(data);
+	current->_neighbor = neighbor;
 	current->_neighbor->_parent = current;
 	return  current->_neighbor;
 }
@@ -96,8 +154,20 @@ void Node::Print(std::ostream& out, int tab_count) const
 
 std::ostream& operator<<(std::ostream& out, const Node& node)
 {
-	auto typeName = TypesName.find(node._data->type.type)->second;
+	out << *(node._data);
+	return out;
+}
+std::ostream& operator<<(std::ostream& out, const Data & _data)
+{
+	auto typeName = TypesName.find(_data.type)->second;
 	out << "Type: " << typeName;
-		out << ", name: " << node._data->id;
+	out << ", name: " << _data.id;
+	if(_data.type == SemanticType::Function)
+	{
+		out << ", to return: " << _data.GetValueView();
+	}
+	else {
+		out << ", value: " << _data.GetValueView();
+	}
 	return out;
 }
