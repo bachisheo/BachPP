@@ -7,8 +7,8 @@ Data::Data(SemanticType semType, const LexemaView& idView) :type(semType), id(id
 {
 	switch (type)
 	{
-	case SemanticType::Float: value.float_value = 3.14f; break;
-	case SemanticType::ShortInt: value.short_int_value = 1; break;
+	case SemanticType::Float: value.float_value = 0.0f; break;
+	case SemanticType::ShortInt: value.short_int_value = 0; break;
 	}
 }
 LexemaView Data::GetValueView() const
