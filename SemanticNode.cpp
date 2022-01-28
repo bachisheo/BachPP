@@ -25,7 +25,7 @@ LexemaView Data::GetValueView() const
 
 Data::~Data()
 {
-	if (value.object_of_class != nullptr)
+	if (type == SemanticType::ClassObj && value.object_of_class != nullptr)
 		delete value.object_of_class;
 }
 
@@ -37,11 +37,19 @@ Data* Data::Clone() const
 
 Node::~Node()
 {
-	delete _child;
-	delete _neighbor;
+	if (_neighbor != nullptr) {
+		delete _neighbor;
+	}
+	if (_child != nullptr) {
+		delete _child;
+	}
+	if (_parent != nullptr)
+		_parent->_child = nullptr;
+
 	delete _data;
+
 }
-FunctionData::FunctionData(SemanticType return_type, const LexemaView& id): Data(SemanticType::Function, id)
+FunctionData::FunctionData(SemanticType return_type, const LexemaView& id) : Data(SemanticType::Function, id)
 {
 	returned_type = return_type;
 	returned_data = new Data(returned_type, "");
@@ -49,7 +57,7 @@ FunctionData::FunctionData(SemanticType return_type, const LexemaView& id): Data
 
 LexemaView FunctionData::GetValueView() const
 {
-	
+
 	std::string result = "[type: ";
 	result += TypesName.find(returned_type)->second;
 	result += ", value: ";
@@ -60,7 +68,7 @@ LexemaView FunctionData::GetValueView() const
 
 FunctionData* FunctionData::Clone() const
 {
-	FunctionData * clone = new FunctionData(returned_type, id);
+	FunctionData* clone = new FunctionData(returned_type, id);
 	return clone;
 }
 
@@ -69,7 +77,7 @@ FunctionData::~FunctionData()
 	delete returned_data;
 }
 
-Node::Node(Data * data)
+Node::Node(Data* data)
 {
 	_data = data;
 }
@@ -90,21 +98,17 @@ Node* Node::GetParent() const
 
 Node* Node::SetChild(Node* child)
 {
-	if (child == nullptr)
-		return  nullptr;
+	delete _child;
 	_child = child;
-	child->SetParent(this);
+	if (child != nullptr)
+		child->SetParent(this);
 	return _child;
 }
-Node* Node::AddChild(Data * data)
+Node* Node::AddChild(Data* data)
 {
-	if (_child == nullptr) {
-		_child = new Node(data);
-		_child->_parent = this;
-		return _child;
-	}
-	else
-		return _child->AddNeighbor(data);
+	if (_child == nullptr)
+		return SetChild(new Node(data));
+	return _child->AddNeighbor(data);
 }
 
 Node* Node::GetChild() const
@@ -112,11 +116,11 @@ Node* Node::GetChild() const
 	return _child;
 }
 
-Node* Node::AddNeighbor(Data * data)
+Node* Node::AddNeighbor(Data* data)
 {
-		return  SetNeighbor(new Node(data));
+	return  SetNeighbor(new Node(data));
 }
-Node* Node::SetNeighbor(Node * neighbor)
+Node* Node::SetNeighbor(Node* neighbor)
 {
 	if (neighbor == nullptr)
 		return  nullptr;
@@ -138,7 +142,7 @@ void Node::Print(std::ostream& out, int tab_count) const
 	out << "\n";
 	for (int i = 0; i < tab_count; i++)
 		out << '\t';
-	out << "[" << * this << "]";
+	out << "[" << *this << "]";
 	if (_child)
 	{
 		for (int i = 0; i < tab_count; i++)
@@ -146,7 +150,7 @@ void Node::Print(std::ostream& out, int tab_count) const
 		out << "\n\tchildren:";
 		_child->Print(out, tab_count + 1);
 	}
-	if(_neighbor)
+	if (_neighbor)
 	{
 		_neighbor->Print(out, tab_count);
 	}
@@ -157,12 +161,12 @@ std::ostream& operator<<(std::ostream& out, const Node& node)
 	out << *(node._data);
 	return out;
 }
-std::ostream& operator<<(std::ostream& out, const Data & _data)
+std::ostream& operator<<(std::ostream& out, const Data& _data)
 {
 	auto typeName = TypesName.find(_data.type)->second;
 	out << "Type: " << typeName;
 	out << ", name: " << _data.id;
-	if(_data.type == SemanticType::Function)
+	if (_data.type == SemanticType::Function)
 	{
 		out << ", to return: " << _data.GetValueView();
 	}

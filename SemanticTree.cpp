@@ -23,12 +23,11 @@ Node* SemanticTree::AddClassObject(const LexemaView& objName, const LexemaView& 
 	{
 		SemanticExit({ "Класса с именем \'", className, "\' не существует" });
 	}
-	CheckUnique(objName);
 	SemanticType type = SemanticType::ClassObj;
 	type.id = className;
 	//add object root
 	auto obj = AddObject(new Data(type,  objName));
-	//obj->SetChild(CopySubtree(classDeclaration->GetChild()));
+	obj->SetChild(CopySubtree(classDeclaration->GetChild()));
 	return obj;
 }
 
@@ -47,12 +46,14 @@ void SemanticTree::RemoveObject(Node * node)
 {
 	if(_current == node)
 	{
-		_current == node->GetParent();
+		_current = node->GetParent();
 	}
+	
 	delete node;
 }
 Node* SemanticTree::AddObject(Data * data)
 {
+	CheckUnique(data->id);
 	if (_root == nullptr)
 	{
 		_root = new Node(data);
