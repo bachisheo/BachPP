@@ -85,7 +85,7 @@ void SyntacticalAnalyzer::CompoundBlock()
 	DeclareInFunction();
 	ScanAndCheck(LexType::RFigBracket);
 	_tree->SetTreePtr(block_ptr);
-	//_tree->RemoveObject(block_ptr);
+	_tree->RemoveObject(block_ptr);
 }
 
 //просканировать на k символов вперед без 
