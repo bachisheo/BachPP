@@ -7,6 +7,7 @@ class SemanticTree
 	Scanner* _sc;
 	bool IsDataType(SemanticType type) const;
 public:
+	bool isInterpreting = true;
 	void Print(std::ostream& out) const;
 	SemanticTree(Scanner* sc);
 	///
@@ -33,7 +34,7 @@ public:
 	///
 	static SemanticType GetType(LexType type_type, LexType next_type);
 	SemanticType GetType(LexType type_type, const LexemaView& type_view) const;
-	bool IsUnique(const LexemaView& lv) const;
+	void CheckUnique(const LexemaView& lv) const;
 	//РїСЂРё РѕР±СЂР°С‰РµРЅРёРё
 	SemanticType GetTypeByView(std::vector<LexemaView> & ids, bool isFunc = false) const;
 	SemanticType	GetConstType(const LexemaView& lv, LexType lt) const;
@@ -41,9 +42,9 @@ public:
 	bool IsEnableUnarySign(SemanticType type) const;
 	bool IsComparableType(SemanticType realType, SemanticType neededType);
 	//РїСЂРё РѕРїРёСЃР°РЅРёРё РїРµСЂРµРјРµРЅРЅС‹С…
-	Node* AddObject(const LexemaView& lv, SemanticType type);
+	void RemoveObject(Node* node);
 	Node* AddObject(Data * data);
-	Node* AddFunc(SemanticType returnedType, const LexemaView& funcName);
+	Node* AddFunctionDeclare(SemanticType returnedType, const LexemaView& funcName);
 	void SetTreePtr(Node* current);
 	Node* AddClass(const LexemaView& className);
 	Node* AddCompoundBlock();
@@ -52,3 +53,5 @@ public:
 private:
 	Node* AddBlock(Data * panetrData);
 };
+
+

@@ -16,10 +16,6 @@ SemanticTree::SemanticTree(Scanner* sc) :_sc(sc)
 	_current = nullptr;
 }
 
-Node* SemanticTree::AddObject(const LexemaView& lv, SemanticType type)
-{
-	return AddObject(new Data(type, lv));
-}
 Node* SemanticTree::AddClassObject(const LexemaView& objName, const LexemaView& className)
 {
 	const auto classDeclaration = FindUp(className);
@@ -27,12 +23,12 @@ Node* SemanticTree::AddClassObject(const LexemaView& objName, const LexemaView& 
 	{
 		SemanticExit({ "Класса с именем \'", className, "\' не существует" });
 	}
-	IsUnique(objName);
+	CheckUnique(objName);
 	SemanticType type = SemanticType::ClassObj;
 	type.id = className;
 	//add object root
 	auto obj = AddObject(new Data(type,  objName));
-	obj->SetChild(CopySubtree(classDeclaration->GetChild()));
+	//obj->SetChild(CopySubtree(classDeclaration->GetChild()));
 	return obj;
 }
 
@@ -47,6 +43,14 @@ Node* SemanticTree::CopySubtree(Node* sub_root)
 	new_root->SetNeighbor(CopySubtree(sub_root->GetNeighbor()));
 	return new_root;
 }
+void SemanticTree::RemoveObject(Node * node)
+{
+	if(_current == node)
+	{
+		_current == node->GetParent();
+	}
+	delete node;
+}
 Node* SemanticTree::AddObject(Data * data)
 {
 	if (_root == nullptr)
@@ -58,15 +62,15 @@ Node* SemanticTree::AddObject(Data * data)
 	{
 		_current = _current->AddNeighbor(data);
 	}
-	/*std::cout << "\n\nДОБАВЛЕН УЗЕЛ: \n" << *data << std::endl;;
-	Print(std::cout);*/
+//	std::cout << "\n\nДОБАВЛЕН УЗЕЛ: \n" << *data << std::endl;;
+	//Print(std::cout);
 	return _current;
 }
 
-Node* SemanticTree::AddFunc(SemanticType returnedType, const LexemaView& funcName)
+Node* SemanticTree::AddFunctionDeclare(SemanticType returnedType, const LexemaView& funcName)
 {
-	IsUnique(funcName);
-	auto func_node = AddBlock(new FunctionData(returnedType, funcName));
+	CheckUnique(funcName);
+	auto func_node = AddObject(new FunctionData(returnedType, funcName));
 	return func_node;
 }
 
@@ -77,23 +81,22 @@ void SemanticTree::SetTreePtr(Node* current)
 
 Node* SemanticTree::AddClass(const LexemaView& className)
 {
-	IsUnique(className);
+	CheckUnique(className);
 	SemanticType type = SemanticType::Class;
 	type.id = className;
-	return AddBlock(new Data(type, className ));
+	auto class_node = AddObject(new Data(type, className));
+	return class_node;
 }
 
 Node* SemanticTree::AddCompoundBlock()
 {
-	return AddBlock(new Data(SemanticType::Empty, "emptyNode"));
+	const auto block = new Node(new Data(SemanticType::Empty, "emptyNode"));
+	_current->SetChild(block);
+	_current = block;
+	return block;
 }
 
-Node* SemanticTree::AddBlock(Data * parentData)
-{
-	Node* parent = AddObject(parentData);
-	_current = parent->AddChild(new Data( SemanticType::Empty, "emptyNode"));
-	return parent;
-}
+
 
 void SemanticTree::SemanticExit(const std::vector<std::string>& errMsg) const
 {
@@ -245,7 +248,7 @@ SemanticType SemanticTree::GetType(LexType type_type, const LexemaView& type_vie
 }
 
 ///
-bool SemanticTree::IsUnique(const LexemaView& lv) const
+void SemanticTree::CheckUnique(const LexemaView& lv) const
 {
 	auto n = FindUpOnLevel(lv);
 	if (n != nullptr)
@@ -254,9 +257,7 @@ bool SemanticTree::IsUnique(const LexemaView& lv) const
 		s += lv;
 		s += "\' не уникален";
 		SemanticExit({ s });
-		return false;
 	}
-	return true;
 }
 std::string StringNameByView(std::vector<LexemaView> ids)
 {

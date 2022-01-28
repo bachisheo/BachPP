@@ -3,7 +3,7 @@
 #include <string>
 
 
-Data::Data(SemanticType semType, const LexemaView& idView) :type(semType), id(idView)
+Data::Data(SemanticType semType, const LexemaView idView) :type(semType), id(idView)
 {
 	switch (type)
 	{

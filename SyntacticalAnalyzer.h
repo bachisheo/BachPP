@@ -11,11 +11,13 @@
 class SyntacticalAnalyzer
 {
 public :
+	bool isInterpret = false;
 	SyntacticalAnalyzer(Scanner* sc);
 	//аксиома S
 	void Program(LexType endLex = LexType::End);
+	void PrintSemanticTree(std::ostream& out) const;
 	std::vector<Node*> userTypes;
-	void PrintSemanticTree(std::ostream& out);
+
 private:
 	SemanticTree* _tree;
 	Scanner* _sc;

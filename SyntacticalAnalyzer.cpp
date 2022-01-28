@@ -16,9 +16,7 @@ void SyntacticalAnalyzer::Operator()
 		//блок
 	case LexType::LFigBracket:
 	{
-		auto ptr = _tree->AddCompoundBlock();
 		CompoundBlock();
-		_tree->SetTreePtr(ptr);
 		break;
 	}
 
@@ -32,7 +30,7 @@ void SyntacticalAnalyzer::Operator()
 		{
 			_tree->SemanticExit({ "Недопустимое условие для 'while'" });
 
-		};
+		}
 		ScanAndCheck(LexType::RRoundBracket);
 		Operator();
 		break;
@@ -82,9 +80,12 @@ void SyntacticalAnalyzer::Operator()
 // --{ declInFunc } --
 void SyntacticalAnalyzer::CompoundBlock()
 {
+	auto block_ptr = _tree->AddCompoundBlock();
 	ScanAndCheck(LexType::LFigBracket);
 	DeclareInFunction();
 	ScanAndCheck(LexType::RFigBracket);
+	_tree->SetTreePtr(block_ptr);
+	//_tree->RemoveObject(block_ptr);
 }
 
 //просканировать на k символов вперед без 
@@ -165,10 +166,10 @@ void SyntacticalAnalyzer::ClassDeclare()
 	ScanAndCheck(LexType::Class);
 	ScanAndCheck(LexType::Id, className);
 	ScanAndCheck(LexType::LFigBracket);
-
-	const auto ptr = _tree->AddClass(className);
+	const auto class_ptr = _tree->AddClass(className);
+	_tree->AddCompoundBlock();
 	Program(LexType::RFigBracket);
-	_tree->SetTreePtr(ptr);
+	_tree->SetTreePtr(class_ptr);
 	ScanAndCheck(LexType::RFigBracket);
 	ScanAndCheck(LexType::DotComma);
 }
@@ -318,7 +319,7 @@ void SyntacticalAnalyzer::Program(LexType endLex)
 	}
 }
 
-void SyntacticalAnalyzer::PrintSemanticTree(std::ostream& out)
+void SyntacticalAnalyzer::PrintSemanticTree(std::ostream& out) const
 {
 	_tree->Print(out);
 }
@@ -381,7 +382,7 @@ void SyntacticalAnalyzer::FunctionDeclare()
 	if (!ScanAndCheck(LexType::main, func_name, false))
 		ScanAndCheck(LexType::Id, func_name);
 	//create node in tree, save ptr
-	auto func_node = _tree->AddFunc(returned_type, func_name);
+	auto func_node = _tree->AddFunctionDeclare(returned_type, func_name);
 	auto func_data = dynamic_cast<FunctionData*>(func_node->_data);
 
 	ScanAndCheck(LexType::LRoundBracket);
@@ -421,8 +422,8 @@ void SyntacticalAnalyzer::DataDeclare()
 		_tree->AddClassObject(var_name, type_view);
 	}
 	else {
-		_tree->IsUnique(var_name);
-		_tree->AddObject(var_name, current_type);
+		_tree->CheckUnique(var_name);
+		_tree->AddObject(new Data(current_type, var_name));
 	}
 
 
@@ -441,8 +442,8 @@ void SyntacticalAnalyzer::DataDeclare()
 			_tree->AddClassObject(var_name, type_view);
 		}
 		else {
-			_tree->IsUnique(var_name);
-			_tree->AddObject(var_name, current_type);
+			_tree->CheckUnique(var_name);
+			_tree->AddObject(new Data(current_type, var_name));
 		}
 	}
 	ScanAndCheck(LexType::DotComma);
