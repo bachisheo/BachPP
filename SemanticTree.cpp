@@ -28,6 +28,8 @@ Node* SemanticTree::AddClassObject(const LexemaView& objName, const LexemaView& 
 	//add object root
 	auto obj = AddObject(new Data(type,  objName));
 	obj->SetChild(CopySubtree(classDeclaration->GetChild()));
+	std::cout << "\n\nСКОПИРОВАНО ПОДДЕРЕВО ОТ КОРНЯ: \n" << *classDeclaration << std::endl;;
+	Print(std::cout);
 	return obj;
 }
 
@@ -48,8 +50,9 @@ void SemanticTree::RemoveObject(Node * node)
 	{
 		_current = node->GetParent();
 	}
-	
+	std::cout << "\n\nУДАЛЕН БЛОК: \n" << *node << std::endl;;
 	delete node;
+	Print(std::cout);
 }
 Node* SemanticTree::AddObject(Data * data)
 {
@@ -63,8 +66,8 @@ Node* SemanticTree::AddObject(Data * data)
 	{
 		_current = _current->AddNeighbor(data);
 	}
-//	std::cout << "\n\nДОБАВЛЕН УЗЕЛ: \n" << *data << std::endl;;
-	//Print(std::cout);
+	std::cout << "\n\nДОБАВЛЕН УЗЕЛ: \n" << *data << std::endl;
+	Print(std::cout);
 	return _current;
 }
 
