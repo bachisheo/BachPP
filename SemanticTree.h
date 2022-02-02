@@ -6,6 +6,7 @@ class SemanticTree
 	Node* _current;
 	Scanner* _sc;
 	bool IsDataType(SemanticType type) const;
+	float mytof(LexemaView view);
 public:
 	bool isInterpreting = true;
 	void Print(std::ostream& out) const;
@@ -36,22 +37,28 @@ public:
 	SemanticType GetType(LexType type_type, const LexemaView& type_view) const;
 	void CheckUnique(const LexemaView& lv) const;
 	//РїСЂРё РѕР±СЂР°С‰РµРЅРёРё
-	SemanticType GetTypeByView(std::vector<LexemaView> & ids, bool isFunc = false) const;
-	SemanticType	GetConstType(const LexemaView& lv, LexType lt) const;
+	Node* GetNodeByView(std::vector<LexemaView> & ids, bool isFunc = false) const;
+	Data* GetConstData(const LexemaView& lv, LexType lt) const;
+	void SetData(Node* dst, Data* src);
 	SemanticType GetResultType(SemanticType a, SemanticType b, LexType sign);
+	Data* GetResult(Data * a, Data * b, LexType sign);
 	bool IsEnableUnarySign(SemanticType type) const;
 	bool IsComparableType(SemanticType realType, SemanticType neededType);
 	//РїСЂРё РѕРїРёСЃР°РЅРёРё РїРµСЂРµРјРµРЅРЅС‹С…
 	void RemoveObject(Node* node);
-	Node* AddObject(Data * data);
+	Node* AddVariableObject(Data * data);
 	Node* AddFunctionDeclare(SemanticType returnedType, const LexemaView& funcName);
 	void SetTreePtr(Node* current);
 	Node* AddClass(const LexemaView& className);
 	Node* AddCompoundBlock();
 	Node* AddClassObject(const LexemaView& objName, const LexemaView& className);
 	static Node* CopySubtree(Node* sub_root);
+	//РїСЂРё РёРЅС‚РµСЂРїСЂРµС‚Р°С†РёРё
+		
 private:
 	Node* AddBlock(Data * panetrData);
+	std::string GetFullName(Node* node);
 };
+
 
 

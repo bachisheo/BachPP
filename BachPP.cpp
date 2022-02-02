@@ -1,14 +1,16 @@
 п»ї// Р“Р»Р°РІРЅС‹Р№ РєР»Р°СЃСЃ РїСЂРѕРµРєС‚Р°
 #include "SyntacticalAnalyzer.h"
+#include  <Windows.h>
 int a = 3;
 
 int main()
 {
-	setlocale(LC_ALL, "rus");
+	SetConsoleOutputCP(1251);
+	SetConsoleCP(1251);
 	Scanner *sc = new Scanner("input.txt");
 	SyntacticalAnalyzer sa =  SyntacticalAnalyzer(sc);
 	sa.Program();
-	std::cout << "РћС€РёР±РѕРє РЅРµ РѕР±РЅР°СЂСѓР¶РµРЅРѕ!";
+	std::cout << std::endl;
 	sa.PrintSemanticTree(std::cout);
 }
 

@@ -1,28 +1,37 @@
 class C{
-	int a, b;
-	float sd;
+	int a = 2, b = 3;
+	float sd = 12e2;
 	float bar(){
 	int f = 4;
 	return f;
 	}
 };
+int k = 1e-2;
 C c;
-class D{
-	int a, b;
-	C c;
-};
-int a(){ 
+
+int main(){
+	c.a = 1234;
+	c.a = c.sd;
+	c.b = 43;
+	c.sd = c.b;
 	return 1;
 }
-int b;
-int main(){
-	b = 4;
-	a() + 2;;;;;
-	while(1 == 1){
-	int i = a();
+/*
+int asd(){ 
+	c.a = 1234;
+	c.a = c.sd;
+	c.b = 43;
+	c.sd = c.b;
+	return 1;
 }
-int b = a();
-return 1;
+
+int main(){
+	asd() + 2;;;;;
+	while(1 == 1){
+	int i = asd();
+	}
+	int b = asd();
+	return 1;
 }
 
 /*

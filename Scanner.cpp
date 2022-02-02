@@ -1,8 +1,8 @@
 #include "Scanner.h"
 
 #pragma warning(disable: 4996)
-LexType Scanner::ScanNumber(LexemaView & lex, int& len) {
-	for (; Digit(t[ptr]); ++ptr, ++len)
+LexType Scanner::ScanNumber(LexemaView& lex, int& len) {
+	for (; IsDigit(t[ptr]); ++ptr, ++len)
 		if (len < MAX_LEX) {
 			lex[len] = t[ptr];
 			++col;
@@ -61,7 +61,7 @@ void Scanner::SkipIgnored() {
 		}
 	}
 }
-static std::string cut(std::string & s)
+static std::string cut(std::string& s)
 {
 	for (size_t i = 0; i < s.size(); i++)
 	{
@@ -72,14 +72,14 @@ static std::string cut(std::string & s)
 	}
 	return s;
 }
-LexType Scanner::Scan(LexemaView & lex)
+LexType Scanner::Scan(LexemaView& lex)
 {
 	lex.resize(MAX_LEX + 1);
 	const auto type = _Scan(lex);
 	cut(lex);
 	return type;
 }
-LexType Scanner::_Scan(LexemaView & lex)
+LexType Scanner::_Scan(LexemaView& lex)
 {
 	SkipIgnored();
 
@@ -88,7 +88,7 @@ LexType Scanner::_Scan(LexemaView & lex)
 	lexBeginLine = line;
 	//ID AND KEYWORDS
 	if (NotDigit(t[ptr])) {
-		for (; Digit(t[ptr]) || NotDigit(t[ptr]); ++ptr, ++len)
+		for (; IsDigit(t[ptr]) || NotDigit(t[ptr]); ++ptr, ++len)
 			if (len < MAX_LEX) {
 				lex[len] = t[ptr];
 				++col;
@@ -101,35 +101,32 @@ LexType Scanner::_Scan(LexemaView & lex)
 		else return keyWordIt->second;
 	}
 	//CONSTS
-	if (Digit(t[ptr])) {
+	if (IsDigit(t[ptr])) {
 		ScanNumber(lex, len);
 		//NUMBER CONST
-		if (t[ptr] != '.' && t[ptr] != 'e' && t[ptr] != 'E')
+		if (t[ptr] != '.' && t[ptr] != 'e')
 			return LexType::ConstInt;
-		//EXPCONST
+		//EXPCONST view: 12.3 or 12.
 		if (t[ptr] == '.') {
 			lex[len++] = t[ptr++];
 			col++;
+			if (IsDigit(t[ptr]))
+				ScanNumber(lex, len);
+		}
+		else
+		//EXPCONST view: 12e+3 or 12e23 or 12e-12
+		{
+			lex[len++] = t[ptr++];
+			if (t[ptr] == '+' || t[ptr] == '-') {
+				lex[len++] = t[ptr++];
+				col++;
+			}
+			if (!IsDigit(t[ptr])) {
+				ErrorMsg(MSG_ID::WAIT_TYPE, line, col, { "число" });
+				return LexType::Error;
+			}
 			ScanNumber(lex, len);
 		}
-		if (t[ptr] != 'e' && t[ptr] != 'E') {
-			ErrorMsg(MSG_ID::WAIT_TYPE, line, col, { "e", "E" });
-			return LexType::Error;
-		}
-		lex[len++] = t[ptr++];
-		if (t[ptr] != '+' && t[ptr] != '-' && !(Digit(t[ptr]))) {
-			ErrorMsg(MSG_ID::WAIT_TYPE, line, col, { "+", "-", "число" });
-			return LexType::Error;
-		}
-		if (t[ptr] == '+' || t[ptr] == '-') {
-			lex[len++] = t[ptr++];
-			col++;
-		}
-		if (!(Digit(t[ptr]))) {
-			ErrorMsg(MSG_ID::WAIT_TYPE, line, col, { "число" });
-			return LexType::Error;
-		}
-		ScanNumber(lex, len);
 		return LexType::ConstExp;
 	}
 	col++;

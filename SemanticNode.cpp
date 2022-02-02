@@ -11,6 +11,12 @@ Data::Data(SemanticType semType, const LexemaView idView) :type(semType), id(idV
 	case SemanticType::ShortInt: value.short_int_value = 0; break;
 	}
 }
+
+Data::Data():Data(SemanticType::Undefined, "")
+{
+
+}
+
 LexemaView Data::GetValueView() const
 {
 	LexemaView view = "Undefined";
@@ -32,6 +38,8 @@ Data::~Data()
 Data* Data::Clone() const
 {
 	Data* clone = new Data(type, this->id);
+	//todo how copy link to node?
+	clone->value = value;
 	return clone;
 }
 
@@ -165,7 +173,8 @@ std::ostream& operator<<(std::ostream& out, const Data& _data)
 {
 	auto typeName = TypesName.find(_data.type)->second;
 	out << "Type: " << typeName;
-	out << ", name: " << _data.id;
+	if(_data.id.length() > 0)
+		out << ", name: " << _data.id;
 	if (_data.type == SemanticType::Function)
 	{
 		out << ", to return: " << _data.GetValueView();

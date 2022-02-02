@@ -10,7 +10,7 @@
 #include "SemanticTree.h"
 class SyntacticalAnalyzer
 {
-public :
+public:
 	bool isInterpret = false;
 	SyntacticalAnalyzer(Scanner* sc);
 	//аксиома S
@@ -23,8 +23,8 @@ private:
 	Scanner* _sc;
 	LexType LookForward(size_t k = 1);
 	LexType LookForward(size_t k, LexemaView& lv);
-	bool ScanAndCheck(LexType lex, LexemaView & lv,  bool needMsg = true);
-	bool ScanAndCheck(LexType lex,  bool needMsg = true);
+	bool ScanAndCheck(LexType lex, LexemaView& lv, bool needMsg = true);
+	bool ScanAndCheck(LexType lex, bool needMsg = true);
 	void LexExit(const std::vector<std::string>& waiting) const;
 	void LexExit(LexType waitingLex) const;
 	void DeclareInFunction();
@@ -33,12 +33,12 @@ private:
 	std::vector<LexemaView> GetFullName();
 	SemanticType ScanType(LexemaView& lv) const;
 	void ClassDeclare();
-	SemanticType Expression();
-	SemanticType LogicalExpression();
-	SemanticType ShiftExpression();
-	SemanticType AdditionalExpression();
-	SemanticType MultExpression();
-	SemanticType ElementaryExpression();
+	Data* Expression();
+	Data* LogicalExpression();
+	Data* ShiftExpression();
+	Data* AdditionalExpression();
+	Data* MultExpression();
+	Data* ElementaryExpression();
 	void Operator();
 	void CompoundBlock();
 };

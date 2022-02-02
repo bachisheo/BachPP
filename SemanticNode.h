@@ -11,16 +11,16 @@ union DataValue
 /// Структура, описывающая содержимое узла дерева
 /// </summary>
 struct Data {
-private:
+
 public:
 	SemanticType type = SemanticType::Undefined;
 	LexemaView id;
 	DataValue value;
 	Data(SemanticType semType, const LexemaView idView);
+	Data();
 	virtual LexemaView GetValueView() const;
 	virtual ~Data();
 	virtual Data* Clone() const;
-
 };
 /// <summary>
 /// Структура для узла с описанием функции

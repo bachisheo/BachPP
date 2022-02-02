@@ -25,8 +25,8 @@ void SyntacticalAnalyzer::Operator()
 		_sc->Scan();
 		ScanAndCheck(LexType::LRoundBracket);
 		//условие
-		auto type = Expression();
-		if (!_tree->IsComparableType(type, SemanticType::ShortInt))
+		auto data = Expression();
+		if (!_tree->IsComparableType(data->type, SemanticType::ShortInt))
 		{
 			_tree->SemanticExit({ "Недопустимое условие для 'while'" });
 
@@ -38,10 +38,10 @@ void SyntacticalAnalyzer::Operator()
 	case LexType::Return: {
 		// todo поднимать флаг ретурна только если он вызван не в операторе 
 		_sc->Scan();
-		auto returnedType = Expression();
+		auto returnedData = Expression();
 		auto function_data = dynamic_cast<FunctionData*>(_tree->FindCurrentFunc()->_data);
 		function_data->is_return_operator_declarated = true;
-		if (!_tree->IsComparableType(returnedType, function_data->returned_type))
+		if (!_tree->IsComparableType(returnedData->type, function_data->returned_type))
 		{
 			_tree->SemanticExit({ "Тип возвращаемого значения не соответсвует объявленному" });
 		}
@@ -50,29 +50,30 @@ void SyntacticalAnalyzer::Operator()
 	}
 	case LexType::Id:
 	{
-		SemanticType needed = SemanticType::Undefined;
 		int a, b, c;
+		bool isAssigment = false;
 		_sc->GetPtrs(a, b, c);
 		auto full_name = GetFullName();
+		Node* destination = _tree->GetNodeByView(full_name);
+		//присваивание
 		if (LookForward() == LexType::Equal)
 		{
 			ScanAndCheck(LexType::Equal);
-			needed = _tree->GetTypeByView(full_name);
+			isAssigment = true;
 		}
 		else
 		{
+			//если это просто вызов операндов, то имя считается повторно
+			//в элементарном выражении, поэтому возвращаем указатель
 			_sc->SetPtrs(a, b, c);
-		} 
-		//присваивание 
-		auto valueType = Expression();
-		if (needed != SemanticType::Undefined && 
-			!_tree->IsComparableType(valueType, needed))
+		}
+		auto exprResult = Expression();
+		if (isAssigment)
 		{
-			_tree->SemanticExit({ "Тип присваемого значения не соответсвует типу переменной" });
-		};
+			_tree->SetData(destination, exprResult);
+		}
 		ScanAndCheck(LexType::DotComma);
 		break;
-		
 	}
 	default:_tree->SemanticExit({ "Ошибочная операция" });;
 	}
@@ -173,19 +174,19 @@ void SyntacticalAnalyzer::ClassDeclare()
 	ScanAndCheck(LexType::RFigBracket);
 	ScanAndCheck(LexType::DotComma);
 }
-SemanticType SyntacticalAnalyzer::Expression()
+Data* SyntacticalAnalyzer::Expression()
 {
 	auto o1 = LogicalExpression();
 	auto nextLex = LookForward();
 	while (nextLex == LexType::LogEqual || nextLex == LexType::LogNotEqual) {
 		auto sign = _sc->Scan();
-		o1 = _tree->GetResultType(o1, LogicalExpression(), sign);
+		o1 = _tree->GetResult(o1, LogicalExpression(), sign);
 		nextLex = LookForward();
 	}
 	return o1;
 }
 
-SemanticType SyntacticalAnalyzer::LogicalExpression()
+Data* SyntacticalAnalyzer::LogicalExpression()
 {
 	auto o1 = ShiftExpression();
 	auto nextLex = LookForward();
@@ -193,26 +194,26 @@ SemanticType SyntacticalAnalyzer::LogicalExpression()
 		nextLex == LexType::More || nextLex == LexType::MoreOrEqual) {
 		auto sign = _sc->Scan();
 		auto o2 = ShiftExpression();
-		o1 = _tree->GetResultType(o1, o2, sign);
+		o1 = _tree->GetResult(o1, o2, sign);
 		nextLex = LookForward();
 	}
 	return o1;
 }
 
-SemanticType SyntacticalAnalyzer::ShiftExpression()
+Data* SyntacticalAnalyzer::ShiftExpression()
 {
 	auto o1 = AdditionalExpression();
 	auto nextLex = LookForward();
 	while (nextLex == LexType::ShiftLeft || nextLex == LexType::ShiftRight) {
 		auto sign = _sc->Scan();
 		auto o2 = AdditionalExpression();
-		o1 = _tree->GetResultType(o1, o2, sign);
+		o1 = _tree->GetResult(o1, o2, sign);
 		nextLex = LookForward();
 	}
 	return o1;
 }
 
-SemanticType SyntacticalAnalyzer::AdditionalExpression()
+Data* SyntacticalAnalyzer::AdditionalExpression()
 {
 	auto nextLex = LookForward();
 	bool unaryOperation = false;
@@ -223,42 +224,42 @@ SemanticType SyntacticalAnalyzer::AdditionalExpression()
 	auto o1 = MultExpression();
 	if (unaryOperation)
 	{
-		_tree->IsEnableUnarySign(o1);
+		_tree->IsEnableUnarySign(o1->type);
 	}
 	nextLex = LookForward();
 	while (nextLex == LexType::Plus || nextLex == LexType::Minus) {
 		auto sign = _sc->Scan();
 		auto o2 = MultExpression();
-		o1 = _tree->GetResultType(o1, o2, sign);
+		o1 = _tree->GetResult(o1, o2, sign);
 		nextLex = LookForward();
 	}
 	return o1;
 }
 
-SemanticType SyntacticalAnalyzer::MultExpression()
+Data* SyntacticalAnalyzer::MultExpression()
 {
 	auto o1 = ElementaryExpression();
 	auto nextLex = LookForward();
 	while (nextLex == LexType::DivSign || nextLex == LexType::ModSign || nextLex == LexType::MultSign) {
 		auto sign = _sc->Scan();
 		auto o2 = ElementaryExpression();
-		o1 = _tree->GetResultType(o1, o2, sign);
+		o1 = _tree->GetResult(o1, o2, sign);
 		nextLex = LookForward();
 	}
 	return o1;
 }
 
 
-SemanticType SyntacticalAnalyzer::ElementaryExpression()
+Data* SyntacticalAnalyzer::ElementaryExpression()
 {
 	LexType lexType = LookForward();
-	LexemaView lv;
-	SemanticType result;
+	LexemaView lexemaView;
+	Data* result = new Data(SemanticType::Undefined, "");
 	switch (lexType) {
 	case LexType::ConstExp:
 	case LexType::ConstInt:
-		_sc->Scan(lv);
-		result = _tree->GetConstType(lv, lexType);
+		_sc->Scan(lexemaView);
+		result = _tree->GetConstData(lexemaView, lexType);
 		break;
 
 	case LexType::Id: {
@@ -267,15 +268,16 @@ SemanticType SyntacticalAnalyzer::ElementaryExpression()
 		//если происходит вызов функции
 		if (lexType == LexType::LRoundBracket) {
 			_sc->Scan();
-			//проверить, есть ли такая функция и вернуть ее тип
-			result = _tree->GetTypeByView(ids, true);
+			//проверить, есть ли такая функция и вернуть ее значение
+			auto func = dynamic_cast<FunctionData*>(_tree->GetNodeByView(ids, true)->_data);
+			result = func->returned_data;
 			ScanAndCheck(LexType::RRoundBracket);
 		}
 		else
 			//при обращении к переменной
 		{
-			//проверить, есть ли такая переменная и вернуть ее тип
-			result = _tree->GetTypeByView(ids);
+			//проверить, есть ли такая переменная и вернуть ее тип и значение
+			result = _tree->GetNodeByView(ids)->_data->Clone();
 		}
 		break;
 	}
@@ -286,7 +288,6 @@ SemanticType SyntacticalAnalyzer::ElementaryExpression()
 		break;
 	default:
 		LexExit({ "No empty expression" });
-		result = SemanticType::Undefined;
 	}
 	return result;
 }
@@ -396,54 +397,47 @@ void SyntacticalAnalyzer::FunctionDeclare()
 }
 //type var |;
 //         |, var...;
-void PrintUpdate(std::string _event, SemanticTree * tree)
+void PrintUpdate(std::string _event)
 {
 	std::cout << "\n\n" << _event;
-	tree->Print(std::cout);
 }
 void SyntacticalAnalyzer::DataDeclare()
 {
-	LexemaView type_view, var_name;
+	LexemaView type_view, var_name, value_view;
+	LexType value_type;
 	const auto current_type = ScanType(type_view);
 	if (current_type == SemanticType::Undefined)
 		_tree->SemanticExit({ "Тип \'" , type_view, "\' не определен" });
 	//read first variable name
 	ScanAndCheck(LexType::Id, var_name);
+	Node* variable;
+	if (current_type == SemanticType::ClassObj)
+	{
+		variable = _tree->AddClassObject(var_name, type_view);
+	}
+	else {
+		variable = _tree->AddVariableObject(new Data(current_type, var_name));
+	}
 	//initiate, if needed
 	if (LookForward() == LexType::Equal) {
 		_sc->Scan();
-		if (!_tree->IsComparableType(current_type, Expression()))
-		{
-			_tree->SemanticExit({ " Ошибка приведения типов" });
-		}
+		_tree->SetData(variable, Expression());
 	}
-	if (current_type == SemanticType::ClassObj)
-	{
-		_tree->AddClassObject(var_name, type_view);
-	}
-	else {
-		_tree->CheckUnique(var_name);
-		_tree->AddObject(new Data(current_type, var_name));
-	}
-
 
 	while (LookForward() == LexType::Comma) {
 		_sc->Scan();
 		ScanAndCheck(LexType::Id, var_name);
-		if (LookForward() == LexType::Equal) {
-			_sc->Scan();
-			if (!_tree->IsComparableType(current_type, Expression()))
-			{
-				_tree->SemanticExit({ "Ошибка приведения типов" });
-			}
-		}
 		if (current_type == SemanticType::ClassObj)
 		{
-			_tree->AddClassObject(var_name, type_view);
+			variable = _tree->AddClassObject(var_name, type_view);
 		}
 		else {
-			_tree->CheckUnique(var_name);
-			_tree->AddObject(new Data(current_type, var_name));
+			variable = _tree->AddVariableObject(new Data(current_type, var_name));
+		}
+		//initiate, if needed
+		if (LookForward() == LexType::Equal) {
+			_sc->Scan();
+			_tree->SetData(variable, Expression());
 		}
 	}
 	ScanAndCheck(LexType::DotComma);
