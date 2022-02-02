@@ -404,7 +404,6 @@ void PrintUpdate(std::string _event)
 void SyntacticalAnalyzer::DataDeclare()
 {
 	LexemaView type_view, var_name, value_view;
-	LexType value_type;
 	const auto current_type = ScanType(type_view);
 	if (current_type == SemanticType::Undefined)
 		_tree->SemanticExit({ "Тип \'" , type_view, "\' не определен" });
