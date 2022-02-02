@@ -9,12 +9,6 @@ bool SemanticTree::IsDataType(SemanticType type) const
 }
 
 
-void SemanticTree::Print(std::ostream& out) const
-{
-	out << "\n--------------------------Семантическое дерево";
-	_root->Print(out, 0);
-}
-
 SemanticTree::SemanticTree(Scanner* sc) :_sc(sc)
 {
 	_current = nullptr;
@@ -35,17 +29,7 @@ Node* SemanticTree::AddClassObject(const LexemaView& objName, const LexemaView& 
 	return obj;
 }
 
-Node* SemanticTree::CopySubtree(Node* sub_root)
-{
-	if (sub_root == nullptr)
-	{
-		return nullptr;
-	}
-	Node* new_root = new Node(sub_root->_data->Clone());
-	new_root->SetChild(CopySubtree(sub_root->GetChild()));
-	new_root->SetNeighbor(CopySubtree(sub_root->GetNeighbor()));
-	return new_root;
-}
+
 
 std::string SemanticTree::GetFullName(Node* node)
 {
@@ -61,16 +45,7 @@ std::string SemanticTree::GetFullName(Node* node)
 	return result;
 }
 
-void SemanticTree::RemoveObject(Node* node)
-{
-	if (_current == node)
-	{
-		_current = node->GetParent();
-	}
-	//std::cout << "\n\nУДАЛЕН БЛОК: \n" << *node << std::endl;;
-	delete node;
-	//Print(std::cout);
-}
+
 Node* SemanticTree::AddVariableObject(Data* data)
 {
 	CheckUnique(data->id);
@@ -83,8 +58,6 @@ Node* SemanticTree::AddVariableObject(Data* data)
 	{
 		_current = _current->AddNeighbor(data);
 	}
-	//std::cout << "\n\nДОБАВЛЕН УЗЕЛ: \n" << *data << std::endl;
-	//Print(std::cout);
 	return _current;
 }
 
@@ -95,10 +68,7 @@ Node* SemanticTree::AddFunctionDeclare(SemanticType returnedType, const LexemaVi
 	return func_node;
 }
 
-void SemanticTree::SetTreePtr(Node* current)
-{
-	_current = current;
-}
+
 
 Node* SemanticTree::AddClass(const LexemaView& className)
 {
@@ -125,69 +95,6 @@ void SemanticTree::SemanticExit(const std::vector<std::string>& errMsg) const
 	exit(1);
 }
 
-void SemanticTree::SetParent(Node* parent) const
-{
-	_current->SetParent(parent);
-}
-
-Node* SemanticTree::GetParent() const
-{
-	return _current->GetParent();
-}
-
-Node* SemanticTree::AddNeighbor(Data* data)
-{
-	_current = _current->AddNeighbor(data);
-	return _current;
-}
-
-Node* SemanticTree::GetNeighbor() const
-{
-	return _current->GetNeighbor();
-}
-
-Node* SemanticTree::FindUpOnLevel(const LexemaView& id) const
-{
-	if (_root == nullptr)
-	{
-		return nullptr;;
-	}
-	return FindUpOnLevel(_current, id);
-}
-
-Node* SemanticTree::FindUpOnLevel(Node* from, const LexemaView& id)
-{
-	auto par = from;
-	while (true) {
-		if (par->_data->id == id)
-		{
-			break;
-		}
-		auto parpar = par->GetParent();
-		if (parpar == nullptr || parpar->GetNeighbor() != par)
-			return nullptr;
-		par = parpar;
-
-	}
-	return par;
-}
-Node* SemanticTree::FindUp(const LexemaView& id) const
-{
-	if (_root == nullptr)
-	{
-		return nullptr;
-	}
-	return FindUp(_current, id);
-}
-
-Node* SemanticTree::FindUp(Node* from, const LexemaView& id)
-{
-	auto par = from;
-	while (par != nullptr && par->_data->id != id) {
-		par = par->GetParent();
-	}
-	return par;
-}
 
 Node* SemanticTree::FindCurrentFunc() const
 {
@@ -202,25 +109,10 @@ Node* SemanticTree::FindCurrentFunc() const
 bool SemanticTree::IsInOperator() const
 {
 	auto prev_node = _current;
-
-	//if(prev_node->_data->data_type = )
 	while (prev_node->_data->type != SemanticType::Function) {
 		prev_node = prev_node->GetParent();
 	}
 	return prev_node;
-}
-
-Node* SemanticTree::FindChild(const LexemaView& id) const
-{
-	return FindChild(_current, id);
-}
-
-Node* SemanticTree::FindChild(const Node* from, const LexemaView& id)
-{
-	auto child = from->GetChild();
-	while (!(child == nullptr || child->_data->id == id))
-		child = child->GetNeighbor();
-	return child;
 }
 
 SemanticType SemanticTree::GetType(LexType type_type, LexType next_type)

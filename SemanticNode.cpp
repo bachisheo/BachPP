@@ -174,7 +174,7 @@ std::ostream& operator<<(std::ostream& out, const Data& _data)
 	auto typeName = TypesName.find(_data.type)->second;
 	out << "Type: " << typeName;
 	if(_data.id.length() > 0)
-		out << ", name: " << _data.id;
+	out << ", name: " << _data.id;
 	if (_data.type == SemanticType::Function)
 	{
 		out << ", to return: " << _data.GetValueView();
