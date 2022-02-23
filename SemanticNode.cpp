@@ -31,8 +31,13 @@ LexemaView Data::GetValueView() const
 
 Data::~Data()
 {
+
+}
+FunctionData::~FunctionData()
+{
 	if (type == SemanticType::ClassObj && value.object_of_class != nullptr)
 		delete value.object_of_class;
+	 delete returned_data;
 }
 
 Data* Data::Clone() const
@@ -52,7 +57,12 @@ Node::~Node()
 		delete _child;
 	}
 	if (_parent != nullptr)
-		_parent->_child = nullptr;
+	{
+		if (_parent->GetNeighbor() == this)
+			_parent->_neighbor = nullptr;
+		else
+			_parent->_child = nullptr;
+	}
 
 	delete _data;
 
@@ -61,6 +71,8 @@ FunctionData::FunctionData(SemanticType return_type, const LexemaView& id) : Dat
 {
 	returned_type = return_type;
 	returned_data = new Data(returned_type, "");
+	if (returned_type == SemanticType::ClassObj)
+		returned_data->value.object_of_class = nullptr;
 }
 
 LexemaView FunctionData::GetValueView() const
@@ -80,10 +92,7 @@ FunctionData* FunctionData::Clone() const
 	return clone;
 }
 
-FunctionData::~FunctionData()
-{
-	delete returned_data;
-}
+
 
 Node::Node(Data* data)
 {
