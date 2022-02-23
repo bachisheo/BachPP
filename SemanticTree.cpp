@@ -355,15 +355,19 @@ Data* SemanticTree::CalculateShortIntValue(Data* a, Data* b, LexType sign) const
 		res += b->value.short_int_value;
 		break;
 	case LexType::Minus:
-		res -=  b->value.short_int_value;
+		res -= b->value.short_int_value;
 		break;
 	case LexType::DivSign:
+		if (b->value.short_int_value == 0)
+			SemanticExit({ "Ошибка: Деление на 0" });
 		res /= b->value.short_int_value;
 		break;
 	case LexType::MultSign:
 		res *= b->value.short_int_value;
 		break;
 	case LexType::ModSign:
+		if(b->value.short_int_value == 0)
+			SemanticExit({ "Ошибка: Деление с остатком на 0"});
 		res %= b->value.short_int_value;
 		break;
 	case LexType::ShiftLeft:

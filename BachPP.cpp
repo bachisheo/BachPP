@@ -1,4 +1,4 @@
-// Главный класс проекта
+// Р“Р»Р°РІРЅС‹Р№ РєР»Р°СЃСЃ РїСЂРѕРµРєС‚Р°
 #include <fstream>
 #include <string>
 
@@ -8,15 +8,13 @@ int a = 3;
 
 int main()
 {
-	int v = 2 * (1 + (1 > 0.01));
-	int a = 1, b = 3;
-	int c = a * b;
+	
 	SetConsoleOutputCP(1251);
 	SetConsoleCP(1251);
 	for(int i = 1; i < 4; i++)
 	{
 		std::string fname = "input" + std::to_string(i) + ".txt";
-		std::cout << "\n-------------------Исходный код\n";
+		std::cout << "\n-------------------Code\n";
 		std::ifstream fin;
 		std::string tmp;
 		fin.open(fname);
@@ -27,7 +25,7 @@ int main()
 			std::cout << tmp << std::endl;;
 		}
 		fin.close();
-		std::cout << "\n-------------------Реакция программы\n";
+		std::cout << "\n-------------------Program output\n";
 
 		Scanner* sc = new Scanner(fname.data());
 		SyntacticalAnalyzer sa = SyntacticalAnalyzer(sc);
