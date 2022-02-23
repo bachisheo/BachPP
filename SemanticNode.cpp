@@ -48,6 +48,24 @@ Data* Data::Clone() const
 	return clone;
 }
 
+void Data::SetValue(short int v)
+{
+	if(type != SemanticType::ShortInt)
+	{
+		exit(200);
+	}
+	value.short_int_value = v;
+}
+void Data::SetValue(float v)
+{
+
+	if (type != SemanticType::Float)
+	{
+		exit(200);
+	}
+	value.float_value = v;
+}
+
 Node::~Node()
 {
 	if (_neighbor != nullptr) {

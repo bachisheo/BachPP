@@ -5,14 +5,13 @@ union DataValue
 {
 	short int short_int_value;
 	float float_value;
+	//for returned value
 	Node* object_of_class;
 };
 /// <summary>
 /// Структура, описывающая содержимое узла дерева
 /// </summary>
 struct Data {
-
-public:
 	SemanticType type = SemanticType::Undefined;
 	LexemaView id;
 	DataValue value;
@@ -21,6 +20,8 @@ public:
 	virtual LexemaView GetValueView() const;
 	virtual ~Data();
 	virtual Data* Clone() const;
+	void SetValue(short int v);
+	void SetValue(float v);
 };
 /// <summary>
 /// Структура для узла с описанием функции
