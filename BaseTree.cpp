@@ -1,8 +1,13 @@
 п»ї#include "BaseTree.h"
 void BaseTree::Print(std::ostream& out) const
 {
-	out << "\n--------------------------Р”РµСЂРµРІРѕ";
-	_root->Print(out, 0);
+	out << "\n--------------------------РџРѕР»СѓС‡РёРІС€РµРµСЃСЏ РґРµСЂРµРІРѕ";
+	if (_root)
+		_root->Print(out, 0);
+	else
+		out << "\nРґРµСЂРµРІРѕ РїСѓСЃС‚Рѕ\n";
+
+	
 }
 Node* BaseTree::CopySubtree(Node* sub_root)
 {

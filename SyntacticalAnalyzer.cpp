@@ -29,7 +29,6 @@ void SyntacticalAnalyzer::Operator()
 		if (!_tree->IsComparableType(data->type, SemanticType::ShortInt))
 		{
 			_tree->SemanticExit({ "Недопустимое условие для 'while'" });
-
 		}
 		ScanAndCheck(LexType::RRoundBracket);
 		Operator();
@@ -39,12 +38,14 @@ void SyntacticalAnalyzer::Operator()
 		// todo поднимать флаг ретурна только если он вызван не в операторе 
 		_sc->Scan();
 		auto returnedData = Expression();
-		auto function_data = dynamic_cast<FunctionData*>(_tree->FindCurrentFunc()->_data);
-		function_data->is_return_operator_declarated = true;
-		if (!_tree->IsComparableType(returnedData->type, function_data->returned_type))
+		auto func = _tree->FindCurrentFunc();
+		auto func_data = dynamic_cast<FunctionData*>(func->_data);
+		func_data->is_return_operator_declarated = true;
+		if (!_tree->IsComparableType(returnedData->type, func_data->returned_type))
 		{
 			_tree->SemanticExit({ "Тип возвращаемого значения не соответсвует объявленному" });
 		}
+		func_data->returned_data = returnedData;
 		ScanAndCheck(LexType::DotComma);
 		break;
 	}
@@ -75,7 +76,7 @@ void SyntacticalAnalyzer::Operator()
 		ScanAndCheck(LexType::DotComma);
 		break;
 	}
-	default:_tree->SemanticExit({ "Ошибочная операция" });;
+	default:_tree->SemanticExit({ "Ошибочная операция" });
 	}
 }
 // --{ declInFunc } --
@@ -180,7 +181,7 @@ Data* SyntacticalAnalyzer::Expression()
 	auto nextLex = LookForward();
 	while (nextLex == LexType::LogEqual || nextLex == LexType::LogNotEqual) {
 		auto sign = _sc->Scan();
-		o1 = _tree->GetResult(o1, LogicalExpression(), sign);
+		o1 = _tree->LogicalOperation(o1, LogicalExpression(), sign);
 		nextLex = LookForward();
 	}
 	return o1;
@@ -193,8 +194,7 @@ Data* SyntacticalAnalyzer::LogicalExpression()
 	while (nextLex == LexType::Less || nextLex == LexType::LessOrEqual ||
 		nextLex == LexType::More || nextLex == LexType::MoreOrEqual) {
 		auto sign = _sc->Scan();
-		auto o2 = ShiftExpression();
-		o1 = _tree->GetResult(o1, o2, sign);
+		o1 = _tree->LogicalOperation(o1, ShiftExpression(), sign);
 		nextLex = LookForward();
 	}
 	return o1;
@@ -207,7 +207,7 @@ Data* SyntacticalAnalyzer::ShiftExpression()
 	while (nextLex == LexType::ShiftLeft || nextLex == LexType::ShiftRight) {
 		auto sign = _sc->Scan();
 		auto o2 = AdditionalExpression();
-		o1 = _tree->GetResult(o1, o2, sign);
+		o1 = _tree->BinaryOperation(o1, o2, sign);
 		nextLex = LookForward();
 	}
 	return o1;
@@ -217,20 +217,20 @@ Data* SyntacticalAnalyzer::AdditionalExpression()
 {
 	auto nextLex = LookForward();
 	bool unaryOperation = false;
+	LexType sign;
 	if (nextLex == LexType::Plus || nextLex == LexType::Minus) {
-		_sc->Scan();
+		sign = _sc->Scan();
 		unaryOperation = true;
 	}
 	auto o1 = MultExpression();
 	if (unaryOperation)
 	{
-		_tree->IsEnableUnarySign(o1->type);
+		o1 = _tree->UnaryOperation(o1, sign);
 	}
 	nextLex = LookForward();
 	while (nextLex == LexType::Plus || nextLex == LexType::Minus) {
-		auto sign = _sc->Scan();
-		auto o2 = MultExpression();
-		o1 = _tree->GetResult(o1, o2, sign);
+		sign = _sc->Scan();
+		o1 = _tree->BinaryOperation(o1, MultExpression(), sign);
 		nextLex = LookForward();
 	}
 	return o1;
@@ -243,7 +243,7 @@ Data* SyntacticalAnalyzer::MultExpression()
 	while (nextLex == LexType::DivSign || nextLex == LexType::ModSign || nextLex == LexType::MultSign) {
 		auto sign = _sc->Scan();
 		auto o2 = ElementaryExpression();
-		o1 = _tree->GetResult(o1, o2, sign);
+		o1 = _tree->BinaryOperation(o1, o2, sign);
 		nextLex = LookForward();
 	}
 	return o1;
@@ -287,7 +287,7 @@ Data* SyntacticalAnalyzer::ElementaryExpression()
 		ScanAndCheck(LexType::RRoundBracket);
 		break;
 	default:
-		LexExit({ "No empty expression" });
+		_tree->SemanticExit({ "Ожидается операнд, но встречен \"" , LexTypesName.find(lexType)->second, "\""});
 	}
 	return result;
 }

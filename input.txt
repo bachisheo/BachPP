@@ -1,6 +1,7 @@
+float o = 24 * -45e0 ;
 class C{
-	int a = 2, b = 3;
-	float sd = 12e2;
+	int a = 1, b = 2;
+	float sd = -1e2;
 	float bar(){
 	int f = 4;
 	return f;
@@ -10,10 +11,8 @@ int k = 1e-2;
 C c;
 
 int main(){
-	c.a = 1234;
-	c.a = c.sd;
-	c.b = 43;
-	c.sd = c.b;
+	c.a = c.a + c.b + c.sd;
+	c.sd = 24 *  -45e0 ;
 	return 1;
 }
 /*
