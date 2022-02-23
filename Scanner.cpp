@@ -75,11 +75,18 @@ static std::string cut(std::string& s)
 LexType Scanner::Scan(LexemaView& lex)
 {
 	lex.resize(MAX_LEX + 1);
-	const auto type = _Scan(lex);
+	const auto type = ScanCode(lex);
 	cut(lex);
 	return type;
 }
-LexType Scanner::_Scan(LexemaView& lex)
+
+LexType Scanner::Scan()
+{
+	LexemaView lex;
+	return Scan(lex);
+}
+
+LexType Scanner::ScanCode(LexemaView& lex)
 {
 	SkipIgnored();
 
@@ -214,6 +221,32 @@ void Scanner::ErrorMsg(MSG_ID id, const std::vector<std::string>& params, bool i
 	else
 		ErrorMsg(id, this->line, this->col, params);
 }
+
+int Scanner::GetPtr()
+{ return ptr; }
+
+void Scanner::SetPtr(int Ptr)
+{ this->ptr = Ptr; }
+
+void Scanner::GetPtrs(int& Ptr, int& Line, int& Col)
+{
+	Ptr = this->ptr;
+	Line = this->line;
+	Col = this->col;
+}
+
+void Scanner::SetPtrs(int Ptr, int Line, int Col)
+{
+	this->ptr = Ptr;
+	this->line = Line;
+	this->col = Col;
+}
+
+const char* Scanner::GetText()
+{
+	return t;
+}
+
 void Scanner::ErrorMsg(MSG_ID id, int str, int col, const std::vector<std::string>& params)
 {
 	switch (id) {

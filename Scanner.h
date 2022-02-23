@@ -5,41 +5,26 @@
 * Никакая синтаксическая информация сканеру не доступна, 
 * синтаксис языка не должен учитываться при программировании сканера
 */
-#pragma once
 #include "defs.h"
 
-#pragma once
+#ifndef scan
+
 class Scanner
 {
-	LexType _Scan(LexemaView& lex);
-
+	LexType ScanCode(LexemaView& lex);
 public:
 	LexType Scan(LexemaView & lex);
-
-	LexType Scan() {
-		LexemaView lex;
-		return Scan(lex);
-	}
+	LexType Scan();
 	void SkipIgnored();
 	void ScanAll();
 	Scanner(const char* name);
 	static void ErrorMsg(MSG_ID id, int str, int col, const std::vector<std::string>& params);
 	void ErrorMsg(MSG_ID id, const std::vector<std::string>& params, bool isBegin = false);
-	int GetPtr() { return ptr; }
-	void SetPtr(int Ptr) { this->ptr = Ptr; }
-	void GetPtrs(int& Ptr, int& Line, int& Col) {
-		Ptr = this->ptr;
-		Line = this->line;
-		Col = this->col;
-	}
-	void SetPtrs(int Ptr, int Line, int Col) {
-		this->ptr = Ptr;
-		this->line = Line;
-		this->col = Col;
-	}
-	const char* GetText() {
-		return t;
-	}
+	int GetPtr();
+	void SetPtr(int Ptr);
+	void GetPtrs(int& Ptr, int& Line, int& Col);
+	void SetPtrs(int Ptr, int Line, int Col);
+	const char* GetText();
 private:
 	LexType ScanNumber(LexemaView & lex, int &len);
 	FILE *fin{};
@@ -52,3 +37,4 @@ private:
 	int lexBeginLine;
 };
 
+#endif
