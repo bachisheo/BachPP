@@ -39,6 +39,7 @@ private:
 	Data* AdditionalExpression();
 	Data* MultExpression();
 	Data* ElementaryExpression();
+	Data* FunctionCall(std::vector<LexemaView>& idsc);
 	void Operator();
 	void CompoundBlock();
 };

@@ -66,6 +66,14 @@ Node* SemanticTree::AddFunctionDeclare(SemanticType returnedType, const LexemaVi
 	return func_node;
 }
 
+Node* SemanticTree::FunctionCall(std::vector<LexemaView>& ids)
+{
+	auto funcDeclare = GetNodeByView(ids, true);
+	//const auto classDeclaration = FindUp(funcName);
+	auto funcCall = AddVariableObject(funcDeclare->_data);
+	funcCall->SetChild(CopySubtree(funcDeclare->GetChild()));
+	return funcCall;
+}
 
 
 Node* SemanticTree::AddClass(const LexemaView& className)
@@ -79,6 +87,7 @@ Node* SemanticTree::AddClass(const LexemaView& className)
 
 Node* SemanticTree::AddCompoundBlock()
 {
+
 	const auto block = new Node(new Data(SemanticType::Empty, "emptyNode"));
 	_current->SetChild(block);
 	_current = block;
@@ -97,20 +106,10 @@ void SemanticTree::SemanticExit(const std::vector<std::string>& errMsg) const
 Node* SemanticTree::FindCurrentFunc() const
 {
 	auto func_node = _current;
-
 	while (func_node->_data->type != SemanticType::Function) {
 		func_node = func_node->GetParent();
 	}
 	return func_node;
-}
-
-bool SemanticTree::IsInOperator() const
-{
-	auto prev_node = _current;
-	while (prev_node->_data->type != SemanticType::Function) {
-		prev_node = prev_node->GetParent();
-	}
-	return prev_node;
 }
 
 SemanticType SemanticTree::GetType(LexType type_type, LexType next_type)
@@ -464,6 +463,8 @@ Data* SemanticTree::CalculateShortIntLogic(Data* a, Data* b, LexType sign) const
 
 Data* SemanticTree::BinaryOperation(Data* a, Data* b, LexType sign)
 {
+	if (!isInterpreting)
+		return nullptr;
 	const auto type = GetResultType(a->type, b->type, sign);
 	switch (type)
 	{
@@ -476,8 +477,10 @@ Data* SemanticTree::BinaryOperation(Data* a, Data* b, LexType sign)
 	}
 }
 
-Data* SemanticTree::UnaryOperation(Data* a, LexType sign)
+Data* SemanticTree::UnaryOperation(Data* a, LexType sign) const
 {
+	if (!isInterpreting)
+		return nullptr;
 	IsEnableUnaryOperation(a->type);
 	Data* d = new Data(*a);
 	switch(d->type)
@@ -502,6 +505,8 @@ Data* SemanticTree::UnaryOperation(Data* a, LexType sign)
 
 Data* SemanticTree::LogicalOperation(Data* a, Data* b, LexType sign)
 {
+	if (!isInterpreting)
+		return nullptr;
 	const auto type = GetResultType(a->type, b->type, sign);
 	switch (type)
 	{
