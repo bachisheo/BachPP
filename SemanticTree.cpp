@@ -248,34 +248,38 @@ Data* SemanticTree::GetConstData(const LexemaView& lv, LexType lt) const
 
 void SemanticTree::SetData(Node* dst, Data* src)
 {
-	if (!IsComparableType(dst->_data->type, src->type))
+	SetData(dst->_data, src);
+	std::cout << "\nПеременной " + GetFullName(dst) + " присвоено значение:\t " << *src;
+}
+void SemanticTree::SetData(Data* dst, Data* src)
+{
+	if (!IsComparableType(dst->type, src->type))
 	{
-		SemanticExit({ " Тип присваемого значения (", src->type.id,  ") не соответсвует типу переменной ", dst->_data->id, "(", dst->_data->type.id, ")" });
+		SemanticExit({ " Тип присваемого значения (", src->type.id,  ") не соответсвует типу переменной ", dst->id, "(", dst->type.id, ")" });
 	}
-	if (dst->_data->type == src->type)
+	if (dst->type == src->type)
 	{
-		dst->_data->value = src->value;
+		dst->value = src->value;
 	}
 	else {
-		switch (dst->_data->type)
+		switch (dst->type)
 		{
 		case SemanticType::Float: {
 			switch (src->type)
 			{
-			case SemanticType::ShortInt: dst->_data->value.float_value = (float)src->value.short_int_value; break;
+			case SemanticType::ShortInt: dst->value.float_value = (float)src->value.short_int_value; break;
 			}
 			break;
 		}
 		case SemanticType::ShortInt: {
 			switch (src->type)
 			{
-			case SemanticType::Float: dst->_data->value.short_int_value = (int16_t)src->value.float_value; break;
+			case SemanticType::Float: dst->value.short_int_value = (int16_t)src->value.float_value; break;
 			}
 			break;
 		}
 		}
 	}
-	std::cout << "\nПеременной " + GetFullName(dst) + " присвоено значение:\t " << *src;
 }
 
 /// <summary>
@@ -530,4 +534,16 @@ bool SemanticTree::IsComparableType(SemanticType realType, SemanticType neededTy
 		return (neededType == SemanticType::ClassObj && realType.id == neededType.id);
 	}
 	return IsDataType(realType) && IsDataType(neededType);
+}
+
+void SemanticTree::SetReturnData(Data* returnedData)
+{
+	auto func = FindCurrentFunc();
+	auto func_data = dynamic_cast<FunctionData*>(func->_data);
+	func_data->is_return_operator_declarated = true;
+	if (!IsComparableType(returnedData->type, func_data->returned_type))
+	{
+		SemanticExit({ "Тип возвращаемого значения не соответсвует объявленному" });
+	}
+	SetData(func_data->returned_data, returnedData);
 }

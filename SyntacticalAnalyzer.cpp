@@ -35,17 +35,9 @@ void SyntacticalAnalyzer::Operator()
 		break;
 	}
 	case LexType::Return: {
-		// todo поднимать флаг ретурна только если он вызван не в операторе 
+		// todo поднимать флаг ретурна только если он вызван не в операторе (для транслятора)
 		_sc->Scan();
-		auto returnedData = Expression();
-		auto func = _tree->FindCurrentFunc();
-		auto func_data = dynamic_cast<FunctionData*>(func->_data);
-		func_data->is_return_operator_declarated = true;
-		if (!_tree->IsComparableType(returnedData->type, func_data->returned_type))
-		{
-			_tree->SemanticExit({ "Тип возвращаемого значения не соответсвует объявленному" });
-		}
-		func_data->returned_data = returnedData;
+		_tree->SetReturnData(Expression());
 		ScanAndCheck(LexType::DotComma);
 		break;
 	}
@@ -55,7 +47,6 @@ void SyntacticalAnalyzer::Operator()
 		bool isAssigment = false;
 		_sc->GetPtrs(a, b, c);
 		auto full_name = GetFullName();
-		Node* destination = _tree->GetNodeByView(full_name);
 		//присваивание
 		if (LookForward() == LexType::Equal)
 		{
@@ -71,7 +62,7 @@ void SyntacticalAnalyzer::Operator()
 		auto exprResult = Expression();
 		if (isAssigment)
 		{
-			_tree->SetData(destination, exprResult);
+			_tree->SetData(_tree->GetNodeByView(full_name), exprResult);
 		}
 		ScanAndCheck(LexType::DotComma);
 		break;
@@ -89,6 +80,7 @@ void SyntacticalAnalyzer::CompoundBlock()
 	_tree->SetTreePtr(block_ptr);
 	_tree->RemoveObject(block_ptr);
 }
+
 
 //просканировать на k символов вперед без 
 //изменения указателей сканера
@@ -384,15 +376,9 @@ void SyntacticalAnalyzer::FunctionDeclare()
 		ScanAndCheck(LexType::Id, func_name);
 	//create node in tree, save ptr
 	auto func_node = _tree->AddFunctionDeclare(returned_type, func_name);
-	auto func_data = dynamic_cast<FunctionData*>(func_node->_data);
-
 	ScanAndCheck(LexType::LRoundBracket);
 	ScanAndCheck(LexType::RRoundBracket);
-	CompoundBlock();
-	if (!func_data->is_return_operator_declarated && func_data->returned_type != SemanticType::Void)
-	{
-		_tree->SemanticExit({ func_name,  " должна возвращать значение" });
-	}
+	CompoundBlock(); 
 	_tree->SetTreePtr(func_node);
 }
 //type var |;

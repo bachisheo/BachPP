@@ -23,6 +23,9 @@ public:
 	Node* GetNodeByView(std::vector<LexemaView> & ids, bool isFunc = false) const;
 	Data* GetConstData(const LexemaView& lv, LexType lt) const;
 	void SetData(Node* dst, Data* src);
+	void SetData(Data* dst, Data* src);
+	void SetReturnData(Data * returnedData);
+
 	SemanticType GetResultType(SemanticType a, SemanticType b, LexType sign);
 	Data * BinaryOperation(Data * a, Data * b, LexType sign);
 	Data * UnaryOperation(Data * a, LexType sign);
@@ -38,6 +41,4 @@ public:
 private:
 	std::string GetFullName(Node* node);
 };
-
-
 
