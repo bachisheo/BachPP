@@ -1,0 +1,27 @@
+class A{
+	class B{
+		int b;
+		int bb(){
+		return 12;
+		}
+	};
+	B b;
+	int a = -1;
+};
+int aa(){
+	A a;
+	a.a = 121;
+	return a.a;
+}
+A bb(){
+	A b;
+	b.a = 12;
+	return b;
+}
+A b;
+int main(){
+	b.b.b = 3;
+	A c = bb();
+	b = c;
+	return aa();
+}
