@@ -1,39 +1,37 @@
 // Р“Р»Р°РІРЅС‹Р№ РєР»Р°СЃСЃ РїСЂРѕРµРєС‚Р°
 #include <fstream>
 #include <string>
-
+#include <sstream>
+#include <algorithm>
 #include "SyntacticalAnalyzer.h"
 #include  <Windows.h>
 int a = 3;
-
+using namespace std;
 int main()
 {
 	
 	SetConsoleOutputCP(1251);
 	SetConsoleCP(1251);
 
-	char* text = new char[MAX_TEXT];
+	string text;
+	stringstream ss;
 
-	for(int i = 1; i < 4; i++)
+	for(int i = 2; i < 3; i++)
 
 	{
-		std::string fname = "input" + std::to_string(i) + ".txt";
-		std::cout << "\n-------------------Code\n";
-		std::ifstream in(fname);
-		in >> text;
+		cout << "\n-------------------Code\n"; 
+		ifstream in("input" + to_string(i) + ".txt");
+		ss << in.rdbuf();
+		ss.putback('\0');
 		in.close();
-		std::cout << text << std::endl << "\n-------------------Program output\n";
-
-		Scanner* sc = new Scanner(text, false);
+		text = ss.str();
+		cout << text << endl << "\n-------------------Program output\n";
+		Scanner* sc = new Scanner(text.c_str(), false);
 		SyntacticalAnalyzer sa = SyntacticalAnalyzer(sc);
-		try {
 			sa.Program();
-		}
-		catch (std::exception e) {
-			std::cerr << e.what();
-		}
-		std::cout << std::endl;
-		sa.PrintSemanticTree(std::cout);
+	
+		cout << endl;
+		sa.PrintSemanticTree(cout);
 	}
 	
 
