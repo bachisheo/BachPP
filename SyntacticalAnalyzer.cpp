@@ -3,7 +3,7 @@
 #include <functional>
 #include <utility>
 
-SyntacticalAnalyzer::SyntacticalAnalyzer(Scanner* sc) : _sc(sc)
+SyntacticalAnalyzer::SyntacticalAnalyzer( Scanner *  sc) : _sc(sc)
 {
 	_tree = new SemanticTree(_sc);
 }
@@ -332,6 +332,13 @@ void SyntacticalAnalyzer::Program(LexType endLex)
 void SyntacticalAnalyzer::PrintSemanticTree(std::ostream& out) const
 {
 	_tree->Print(out);
+}
+
+SyntacticalAnalyzer::~SyntacticalAnalyzer()
+{
+	delete _tree;
+
+	std::cout << "\n" << this;
 }
 
 void SyntacticalAnalyzer::LexExit(const std::vector<std::string>& waiting) const

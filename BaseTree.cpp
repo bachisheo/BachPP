@@ -26,7 +26,8 @@ void BaseTree::RemoveObject(Node* node)
 	{
 		_current = node->GetParent();
 	}
-	delete node;
+	
+	node;
 }
 void BaseTree::SetTreePtr(Node* current)
 {
@@ -107,4 +108,10 @@ Node* BaseTree::FindChild(const Node* from, const LexemaView& id)
 	while (!(child == nullptr || child->_data->id == id))
 		child = child->GetNeighbor();
 	return child;
+}
+
+BaseTree::~BaseTree()
+{
+	std::cout << "\n" <<  this;
+	delete _root;
 }

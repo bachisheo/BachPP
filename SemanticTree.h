@@ -3,7 +3,7 @@
 
 class SemanticTree : public BaseTree
 {
-	Scanner* _sc;
+	 Scanner* _sc;
 	bool IsDataType(SemanticType type) const;
 	Data * CalculateFloatValue(Data* a, Data* b, LexType sign) const;
 	Data * CalculateShortIntValue(Data* a, Data* b, LexType sign) const;
@@ -11,7 +11,7 @@ class SemanticTree : public BaseTree
 	Data * CalculateShortIntLogic(Data* a, Data* b, LexType sign) const;
 public:
 	bool isInterpreting = true, is_returned = false;;
-	SemanticTree(Scanner* sc);
+	SemanticTree( Scanner* sc);
 	void SemanticExit(const std::vector<std::string> & errMsg) const;
 	Node* FindCurrentFunc() const;
 
@@ -38,6 +38,7 @@ public:
 	Node* AddClass(const LexemaView& className);
 	Node* AddCompoundBlock();
 	Node* AddClassObject(const LexemaView& objName, const LexemaView& className);
+
 private:
 	std::string GetFullName(Node* node);
 };

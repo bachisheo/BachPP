@@ -12,15 +12,16 @@ class SyntacticalAnalyzer
 {
 public:
 	bool isInterpret = false;
-	SyntacticalAnalyzer(Scanner* sc);
+	SyntacticalAnalyzer( Scanner* sc);
 	//аксиома S
 	void Program(LexType endLex = LexType::End);
 	void PrintSemanticTree(std::ostream& out) const;
 	std::vector<Node*> userTypes;
+	~SyntacticalAnalyzer();
 
 private:
 	SemanticTree* _tree;
-	Scanner* _sc;
+	Scanner *  _sc;
 	LexType LookForward(size_t k = 1);
 	LexType LookForward(size_t k, LexemaView& lv);
 	bool ScanAndCheck(LexType lex, LexemaView& lv, bool needMsg = true);

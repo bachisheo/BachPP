@@ -9,7 +9,7 @@ bool SemanticTree::IsDataType(SemanticType type) const
 }
 
 
-SemanticTree::SemanticTree(Scanner* sc) :_sc(sc)
+SemanticTree::SemanticTree( Scanner* sc) :_sc(sc)
 {
 	_current = nullptr;
 }
@@ -98,7 +98,7 @@ Node* SemanticTree::AddCompoundBlock()
 
 void SemanticTree::SemanticExit(const std::vector<std::string>& errMsg) const
 {
-	exit(12);
+	//exit(12);
 	auto s = _sc->ErrorMsg(MSG_ID::SEM_ERR, errMsg);
 	throw std::exception(s.c_str());
 }

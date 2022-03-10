@@ -24,5 +24,5 @@ public:
 	//РїРѕРёСЃРє СЃСЂРµРґРё РїРѕС‚РѕРјРєРѕРІ
 	Node* FindChild(const LexemaView& id) const;
 	static Node* FindChild(const Node* from, const LexemaView& id);
-
+	~BaseTree();
 };

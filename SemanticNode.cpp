@@ -32,12 +32,17 @@ LexemaView Data::GetValueView() const
 Data::~Data()
 {
 
+	std::cout << "\n" << this;
 }
 FunctionData::~FunctionData()
 {
 	if (type == SemanticType::ClassObj && value.object_of_class != nullptr)
 		delete value.object_of_class;
 	 delete returned_data;
+
+
+	 std::cout << "\n" << this;
+
 }
 
 Data* Data::Clone() const
@@ -68,6 +73,7 @@ void Data::SetValue(float v)
 
 Node::~Node()
 {
+
 	if (_neighbor != nullptr) {
 		delete _neighbor;
 	}
@@ -84,6 +90,7 @@ Node::~Node()
 
 	delete _data;
 
+	std::cout << "\n" << this;
 }
 FunctionData::FunctionData(SemanticType return_type, const LexemaView& id) : Data(SemanticType::Function, id)
 {

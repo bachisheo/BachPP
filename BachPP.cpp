@@ -17,23 +17,26 @@ int main()
 	stringstream ss;
 
 	for(int i = 2; i < 3; i++)
-
 	{
+		auto fname = "input" + to_string(i) + ".txt";
 		cout << "\n-------------------Code\n"; 
-		ifstream in("input" + to_string(i) + ".txt");
+		ifstream in(fname);
 		ss << in.rdbuf();
-		ss.putback('\0');
 		in.close();
 		text = ss.str();
+		text.push_back('\0');
 		cout << text << endl << "\n-------------------Program output\n";
-		Scanner* sc = new Scanner(text.c_str(), false);
-		SyntacticalAnalyzer sa = SyntacticalAnalyzer(sc);
+		auto sc = Scanner(text.c_str(), false);
+		SyntacticalAnalyzer sa = SyntacticalAnalyzer(&sc);
+		try {
 			sa.Program();
-	
-		cout << endl;
-		sa.PrintSemanticTree(cout);
+			cout << endl;
+			sa.PrintSemanticTree(cout);
+		}catch(exception e)
+		{
+			std::cout << e.what();
+		}
+		
 	}
-	
-
 }
 
