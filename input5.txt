@@ -1,0 +1,20 @@
+int v = 2 * (1 + 1 > 1e-2);
+class C{
+	int a = 1, b = 2;
+	float sd = -1e2;
+	float bar(){
+	int f = 4;
+	return f;
+	}
+};
+
+int main(){
+	C c;
+	c.a = c.a + c.b + c.sd;
+	c.sd = 24 * 45e0 ;
+	int a = 1;
+	float b = 1e-2;
+	int v = 2 * (1 + a > b);
+	v = 2 * (1 + (a > b));
+	return 1;
+}

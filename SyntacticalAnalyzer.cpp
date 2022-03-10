@@ -35,17 +35,9 @@ void SyntacticalAnalyzer::Operator()
 		break;
 	}
 	case LexType::Return: {
-		// todo поднимать флаг ретурна только если он вызван не в операторе 
+		// todo поднимать флаг ретурна только если он вызван не в операторе (для транслятора)
 		_sc->Scan();
-		auto returnedData = Expression();
-		auto func = _tree->FindCurrentFunc();
-		auto func_data = dynamic_cast<FunctionData*>(func->_data);
-		func_data->is_return_operator_declarated = true;
-		if (!_tree->IsComparableType(returnedData->type, func_data->returned_type))
-		{
-			_tree->SemanticExit({ "Тип возвращаемого значения не соответсвует объявленному" });
-		}
-		func_data->returned_data = returnedData;
+		_tree->SetReturnData(Expression());
 		ScanAndCheck(LexType::DotComma);
 		break;
 	}
@@ -55,7 +47,6 @@ void SyntacticalAnalyzer::Operator()
 		bool isAssigment = false;
 		_sc->GetPtrs(a, b, c);
 		auto full_name = GetFullName();
-		Node* destination = _tree->GetNodeByView(full_name);
 		//присваивание
 		if (LookForward() == LexType::Equal)
 		{
@@ -71,7 +62,7 @@ void SyntacticalAnalyzer::Operator()
 		auto exprResult = Expression();
 		if (isAssigment)
 		{
-			_tree->SetData(destination, exprResult);
+			_tree->SetData(_tree->GetNodeByView(full_name), exprResult);
 		}
 		ScanAndCheck(LexType::DotComma);
 		break;
@@ -89,6 +80,7 @@ void SyntacticalAnalyzer::CompoundBlock()
 	_tree->SetTreePtr(block_ptr);
 	_tree->RemoveObject(block_ptr);
 }
+
 
 //просканировать на k символов вперед без 
 //изменения указателей сканера
@@ -267,14 +259,10 @@ Data* SyntacticalAnalyzer::ElementaryExpression()
 		lexType = LookForward();
 		//если происходит вызов функции
 		if (lexType == LexType::LRoundBracket) {
-			_sc->Scan();
-			//проверить, есть ли такая функция и вернуть ее значение
-			auto func = dynamic_cast<FunctionData*>(_tree->GetNodeByView(ids, true)->_data);
-			result = func->returned_data;
-			ScanAndCheck(LexType::RRoundBracket);
+			result = FunctionCall(ids);
 		}
+		//при обращении к переменной
 		else
-			//при обращении к переменной
 		{
 			//проверить, есть ли такая переменная и вернуть ее тип и значение
 			result = _tree->GetNodeByView(ids)->_data->Clone();
@@ -290,6 +278,27 @@ Data* SyntacticalAnalyzer::ElementaryExpression()
 		_tree->SemanticExit({ "Ожидается операнд, но встречен \"" , LexTypesName.find(lexType)->second, "\""});
 	}
 	return result;
+}
+
+Data* SyntacticalAnalyzer::FunctionCall(std::vector<LexemaView>& ids)
+{
+	_sc->Scan();
+	//в нашей программе методы без параметров
+	ScanAndCheck(LexType::RRoundBracket);
+	auto funcDeclare = _tree->GetNodeByView(ids, true);
+	//скопировать заголовок функции
+	auto func = _tree->FunctionCall(ids);
+	auto data = dynamic_cast<FunctionData*>(func->_data);
+	//сохранить контекст
+	int ptr, line, col;
+	_sc->GetPtrs(ptr, line, col);
+	//установить контекст описания фукнции
+	_sc->SetPtrs(data->ptr, data->line, data->col);
+
+	CompoundBlock();
+	_sc->SetPtrs(ptr, line, col);
+	return data->returned_data;
+
 }
 
 //     ---|     CLASS		|---
@@ -375,25 +384,34 @@ void SyntacticalAnalyzer::DeclareInFunction()
 void SyntacticalAnalyzer::FunctionDeclare()
 {
 	LexemaView func_name, type_view;
+	bool is_main = false, saved_interpret;
+
 	auto returned_type = ScanType(type_view);
 	if (returned_type == SemanticType::Undefined) {
 		_tree->SemanticExit({ "Тип \'" , type_view, "\' не определен" });
 	}
 	returned_type.id = type_view;
-	if (!ScanAndCheck(LexType::main, func_name, false))
+	if (ScanAndCheck(LexType::main, func_name, false))
+	{
+		is_main = true;
+		_tree->isInterpreting = true;
+	}
+	else {
 		ScanAndCheck(LexType::Id, func_name);
-	//create node in tree, save ptr
+		saved_interpret = _tree->isInterpreting;
+		_tree->isInterpreting = false;
+	}
+	//create node in tree 
 	auto func_node = _tree->AddFunctionDeclare(returned_type, func_name);
-	auto func_data = dynamic_cast<FunctionData*>(func_node->_data);
-
 	ScanAndCheck(LexType::LRoundBracket);
 	ScanAndCheck(LexType::RRoundBracket);
-	CompoundBlock();
-	if (!func_data->is_return_operator_declarated && func_data->returned_type != SemanticType::Void)
-	{
-		_tree->SemanticExit({ func_name,  " должна возвращать значение" });
-	}
+	CompoundBlock(); 
+
 	_tree->SetTreePtr(func_node);
+	if(!is_main)
+	{
+		_tree->isInterpreting = saved_interpret;
+	}
 }
 //type var |;
 //         |, var...;

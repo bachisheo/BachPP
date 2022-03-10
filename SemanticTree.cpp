@@ -66,6 +66,14 @@ Node* SemanticTree::AddFunctionDeclare(SemanticType returnedType, const LexemaVi
 	return func_node;
 }
 
+Node* SemanticTree::FunctionCall(std::vector<LexemaView>& ids)
+{
+	auto funcDeclare = GetNodeByView(ids, true);
+	//const auto classDeclaration = FindUp(funcName);
+	auto funcCall = AddVariableObject(funcDeclare->_data);
+	funcCall->SetChild(CopySubtree(funcDeclare->GetChild()));
+	return funcCall;
+}
 
 
 Node* SemanticTree::AddClass(const LexemaView& className)
@@ -79,6 +87,7 @@ Node* SemanticTree::AddClass(const LexemaView& className)
 
 Node* SemanticTree::AddCompoundBlock()
 {
+
 	const auto block = new Node(new Data(SemanticType::Empty, "emptyNode"));
 	_current->SetChild(block);
 	_current = block;
@@ -98,20 +107,10 @@ void SemanticTree::SemanticExit(const std::vector<std::string>& errMsg) const
 Node* SemanticTree::FindCurrentFunc() const
 {
 	auto func_node = _current;
-
 	while (func_node->_data->type != SemanticType::Function) {
 		func_node = func_node->GetParent();
 	}
 	return func_node;
-}
-
-bool SemanticTree::IsInOperator() const
-{
-	auto prev_node = _current;
-	while (prev_node->_data->type != SemanticType::Function) {
-		prev_node = prev_node->GetParent();
-	}
-	return prev_node;
 }
 
 SemanticType SemanticTree::GetType(LexType type_type, LexType next_type)
@@ -249,34 +248,38 @@ Data* SemanticTree::GetConstData(const LexemaView& lv, LexType lt) const
 
 void SemanticTree::SetData(Node* dst, Data* src)
 {
-	if (!IsComparableType(dst->_data->type, src->type))
+	SetData(dst->_data, src);
+	std::cout << "\nПеременной " + GetFullName(dst) + " присвоено значение:\t " << *src;
+}
+void SemanticTree::SetData(Data* dst, Data* src)
+{
+	if (!IsComparableType(dst->type, src->type))
 	{
-		SemanticExit({ " Тип присваемого значения (", src->type.id,  ") не соответсвует типу переменной ", dst->_data->id, "(", dst->_data->type.id, ")" });
+		SemanticExit({ " Тип присваемого значения (", src->type.id,  ") не соответсвует типу переменной ", dst->id, "(", dst->type.id, ")" });
 	}
-	if (dst->_data->type == src->type)
+	if (dst->type == src->type)
 	{
-		dst->_data->value = src->value;
+		dst->value = src->value;
 	}
 	else {
-		switch (dst->_data->type)
+		switch (dst->type)
 		{
 		case SemanticType::Float: {
 			switch (src->type)
 			{
-			case SemanticType::ShortInt: dst->_data->value.float_value = (float)src->value.short_int_value; break;
+			case SemanticType::ShortInt: dst->value.float_value = (float)src->value.short_int_value; break;
 			}
 			break;
 		}
 		case SemanticType::ShortInt: {
 			switch (src->type)
 			{
-			case SemanticType::Float: dst->_data->value.short_int_value = (int16_t)src->value.float_value; break;
+			case SemanticType::Float: dst->value.short_int_value = (int16_t)src->value.float_value; break;
 			}
 			break;
 		}
 		}
 	}
-	std::cout << "\nПеременной " + GetFullName(dst) + " присвоено значение:\t " << *src;
 }
 
 /// <summary>
@@ -461,6 +464,8 @@ Data* SemanticTree::CalculateShortIntLogic(Data* a, Data* b, LexType sign) const
 
 Data* SemanticTree::BinaryOperation(Data* a, Data* b, LexType sign)
 {
+	if (!isInterpreting)
+		return nullptr;
 	const auto type = GetResultType(a->type, b->type, sign);
 	switch (type)
 	{
@@ -473,8 +478,10 @@ Data* SemanticTree::BinaryOperation(Data* a, Data* b, LexType sign)
 	}
 }
 
-Data* SemanticTree::UnaryOperation(Data* a, LexType sign)
+Data* SemanticTree::UnaryOperation(Data* a, LexType sign) const
 {
+	if (!isInterpreting)
+		return nullptr;
 	IsEnableUnaryOperation(a->type);
 	Data* d = new Data(*a);
 	switch(d->type)
@@ -499,6 +506,8 @@ Data* SemanticTree::UnaryOperation(Data* a, LexType sign)
 
 Data* SemanticTree::LogicalOperation(Data* a, Data* b, LexType sign)
 {
+	if (!isInterpreting)
+		return nullptr;
 	const auto type = GetResultType(a->type, b->type, sign);
 	switch (type)
 	{
@@ -531,4 +540,16 @@ bool SemanticTree::IsComparableType(SemanticType realType, SemanticType neededTy
 		return (neededType == SemanticType::ClassObj && realType.id == neededType.id);
 	}
 	return IsDataType(realType) && IsDataType(neededType);
+}
+
+void SemanticTree::SetReturnData(Data* returnedData)
+{
+	auto func = FindCurrentFunc();
+	auto func_data = dynamic_cast<FunctionData*>(func->_data);
+	func_data->is_return_operator_declarated = true;
+	if (!IsComparableType(returnedData->type, func_data->returned_type))
+	{
+		SemanticExit({ "Тип возвращаемого значения не соответсвует объявленному" });
+	}
+	SetData(func_data->returned_data, returnedData);
 }

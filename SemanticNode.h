@@ -28,6 +28,8 @@ struct Data {
 /// </summary>
 struct FunctionData : Data
 {
+	//ptr's in scanner to function body
+	int ptr, line, col;
 	bool is_return_operator_declarated = false;
 	SemanticType returned_type = SemanticType::Empty;
 	Data* returned_data;

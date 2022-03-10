@@ -1,0 +1,11 @@
+int a = 2, b = -3 ;
+float c = a << 3;
+int func(){
+	return a * c;
+}
+int main(){
+	int true = c + b * 3 != (c + b) * 3;
+	int res = func() / a;
+	res = b % a;
+	res = a % c;
+}
