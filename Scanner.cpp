@@ -1,4 +1,7 @@
 #include "Scanner.h"
+#include <iostream>
+#include <fstream>
+#include <string>
 
 #pragma warning(disable: 4996)
 LexType Scanner::ScanNumber(LexemaView& lex, int& len) {
@@ -204,22 +207,35 @@ void Scanner::ScanAll()
 	} while (res != LexType::End);
 }
 
-Scanner::Scanner(const char* name) : line(1), col(1), ptr(0), size(0), lexBeginCol(0), lexBeginLine(0)
+Scanner::Scanner(const char* text, bool is_file) : line(1), col(1), ptr(0), size(0), lexBeginCol(0), lexBeginLine(0)
 {
-	fopen_s(&fin, name, "r");
+	if (is_file) {
+		std::ifstream in(text);
+		std::string contents((std::istreambuf_iterator<char>(in)),
+			std::istreambuf_iterator<char>());
+		in >> t;
+		in.close();
+	}
+	else
+	{
+		t = new char(std::strlen(text));
+		std::strcpy(t, text);
+	}
+	/*fopen_s(&fin, name, "r");
 	t = new char[MAX_TEXT];
+
 	while (!feof(fin))
 		fscanf_s(fin, "%c", &t[size++]);
 	size--;
 	t[size] = '\0';
-	fclose(fin);
+	fclose(fin);*/
 }
 
-void Scanner::ErrorMsg(MSG_ID id, const std::vector<std::string>& params, bool isBegin) {
+std::string Scanner::ErrorMsg(MSG_ID id, const std::vector<std::string>& params, bool isBegin) {
 	if (isBegin)
-		ErrorMsg(id, this->lexBeginLine, this->lexBeginCol, params);
+		return ErrorMsg(id, this->lexBeginLine, this->lexBeginCol, params);
 	else
-		ErrorMsg(id, this->line, this->col, params);
+		return ErrorMsg(id, this->line, this->col, params);
 }
 
 int Scanner::GetPtr()
@@ -247,25 +263,29 @@ const char* Scanner::GetText()
 	return t;
 }
 
-void Scanner::ErrorMsg(MSG_ID id, int str, int col, const std::vector<std::string>& params)
+std::string Scanner::ErrorMsg(MSG_ID id, int str, int col, const std::vector<std::string>& params)
 {
+	std::string msg = "";
 	switch (id) {
 	case MSG_ID::LONG_LEX: std::cout << "\nЛексема больше 10 символов!"; break;
 	case MSG_ID::WAIT_TYPE:
-		std::cout << "\nДля данного типа лексемы ожидается: \"";
+		msg += "\nДля данного типа лексемы ожидается: \"";
 		for (auto next : params)
-			std::cout << "\'" << next << "\',  ";
+			msg += "\'" + next + "\',  ";
 		break;
 	case MSG_ID::SYNT_ERR:
-		std::cout << "\nДля данного синтаксиса ожидается: \"";
+		msg += "\nДля данного синтаксиса ожидается: \"";
 		for (auto next : params)
-			std::cout << "\'" << next << "\',  ";
+			msg += "\'" + next + "\',  ";
 		break;
 	case MSG_ID::SEM_ERR:
-		std::cout << "\nСемантическая ошибка: \"";
+		msg += "\nСемантическая ошибка: \"";
 		for (auto next : params)
-			std::cout << " " << next;
+			msg += " " + next;
 		break;
 	}
-	std::cout << "\" Строка " << str << " символ " << col << std::endl;
+	msg += "\" Строка " + std::to_string(str);
+	msg += " символ " + std::to_string(col);
+	msg += "\n";
+	return msg;
 }

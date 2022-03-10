@@ -17,9 +17,9 @@ public:
 	LexType Scan();
 	void SkipIgnored();
 	void ScanAll();
-	Scanner(const char* name);
-	static void ErrorMsg(MSG_ID id, int str, int col, const std::vector<std::string>& params);
-	void ErrorMsg(MSG_ID id, const std::vector<std::string>& params, bool isBegin = false);
+	Scanner(const char* text, bool is_file);
+	std::string ErrorMsg(MSG_ID id, int str, int col, const std::vector<std::string>& params);
+	std::string ErrorMsg(MSG_ID id, const std::vector<std::string>& params, bool isBegin = false);
 	int GetPtr();
 	void SetPtr(int Ptr);
 	void GetPtrs(int& Ptr, int& Line, int& Col);

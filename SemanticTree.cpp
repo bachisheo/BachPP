@@ -89,8 +89,9 @@ Node* SemanticTree::AddCompoundBlock()
 
 void SemanticTree::SemanticExit(const std::vector<std::string>& errMsg) const
 {
-	_sc->ErrorMsg(MSG_ID::SEM_ERR, errMsg);
-	exit(1);
+	exit(12);
+	auto s = _sc->ErrorMsg(MSG_ID::SEM_ERR, errMsg);
+	throw std::exception(s.c_str());
 }
 
 
