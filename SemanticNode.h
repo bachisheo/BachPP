@@ -31,6 +31,7 @@ struct FunctionData : Data
 	bool is_return_operator_declarated = false;
 	SemanticType returned_type = SemanticType::Empty;
 	Data* returned_data;
+	int ptr, col, line;
 	FunctionData(SemanticType return_type, const LexemaView& id);
 	LexemaView GetValueView() const override;
 	FunctionData* Clone() const override;

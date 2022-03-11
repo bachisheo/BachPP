@@ -371,15 +371,11 @@ void SyntacticalAnalyzer::FunctionDeclare()
 		ScanAndCheck(LexType::Id, func_name);
 		isMain = false;
 	}
-	
 	//create node in tree, save ptr
 	auto func_node = _tree->AddFunctionDeclare(returned_type, func_name);
 	ScanAndCheck(LexType::LRoundBracket);
 	ScanAndCheck(LexType::RRoundBracket);
-	if(!isMain)
-	{
-		_tree->isInterpreting = false;
-	}
+	_tree->isInterpreting = isMain;
 	CompoundBlock();
 	_tree->SetTreePtr(func_node);
 	_tree->isInterpreting = isIntSaved;

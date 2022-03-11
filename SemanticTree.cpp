@@ -124,6 +124,8 @@ Node* SemanticTree::AddFunctionDeclare(SemanticType returnedType, const LexemaVi
 		return nullptr;
 	CheckUnique(funcName);
 	auto func_node = AddVariableObject(new FunctionData(returnedType, funcName));
+	auto func_data = dynamic_cast<FunctionData*>(func_node->_data);
+	_sc->GetPtrs(func_data->ptr, func_data->line, func_data->col);
 	return func_node;
 }
 
