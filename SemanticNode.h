@@ -43,8 +43,8 @@ class Node
 {
 	Node* _parent = nullptr;
 	Node* _child = nullptr;
-	Node* _neighbor = nullptr;
 public:
+	Node* _neighbor = nullptr;
 	Data* _data;
 	Node(Data* data);
 	Node();
@@ -53,7 +53,7 @@ public:
 	Node* AddChild(Data* data);
 	Node* GetChild() const;
 	Node* AddNeighbor(Data* data);
-	Node* SetNeighbor(Node* node);
+	Node* AddNeighbor(Node* node);
 	Node* GetNeighbor() const;
 	Node* SetChild(Node* child);
 	void Print(std::ostream& out, int tab_count) const;

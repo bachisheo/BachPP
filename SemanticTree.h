@@ -34,15 +34,20 @@ public:
 	Node* AddClassObject(const LexemaView& objName, const LexemaView& className);
 	void CheckWhileExp(Data* data) const;
 	void SetReturnedData(Data* data) const;
-	Data* GetNodeValue(std::vector<LexemaView> ids, bool isFunc = false) const;
+	Data* GetNodeValue(std::vector<LexemaView> ids) const;
+	Node* AddFunctionCall(Node * func);
+	void RemoveFunctionCall(Node * func_call);
 //BaseTree overriting mathods
 	void RemoveObject(Node* node);
 	void Print(std::ostream& out) const;
 	void SetTreePtr(Node* current);
+	Node * GetTreePtr();
 private:
 	bool IsComparableType(SemanticType realType, SemanticType neededType) const;
 	std::string GetFullName(Node* node);
 };
+
+
 
 
 

@@ -5,7 +5,6 @@
 #include "SyntacticalAnalyzer.h"
 #include  <Windows.h>
 int a = 3;
-
 int main()
 {
 	

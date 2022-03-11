@@ -258,8 +258,8 @@ Data* SyntacticalAnalyzer::ElementaryExpression()
 		//если происходит вызов функции
 		if (lexType == LexType::LRoundBracket) {
 			_sc->Scan();
-			result = _tree->GetNodeValue(ids, true);
 			ScanAndCheck(LexType::RRoundBracket);
+			result = FunctionExecute(ids);
 		}
 		else
 		{
@@ -375,11 +375,45 @@ void SyntacticalAnalyzer::FunctionDeclare()
 	auto func_node = _tree->AddFunctionDeclare(returned_type, func_name);
 	ScanAndCheck(LexType::LRoundBracket);
 	ScanAndCheck(LexType::RRoundBracket);
+	if (func_node)
+	{
+		auto data = dynamic_cast<FunctionData*>(func_node->_data);
+		_sc->GetPtrs(data->ptr, data->line, data->col);
+	}
 	_tree->isInterpreting = isMain;
 	CompoundBlock();
 	_tree->SetTreePtr(func_node);
 	_tree->isInterpreting = isIntSaved;
 }
+
+Data * SyntacticalAnalyzer::FunctionExecute(std::vector<LexemaView> ids)
+{
+	if (!_tree->isInterpreting)
+		return nullptr;
+	//получить узел с описанием функции
+	auto func = _tree->GetNodeByView(ids, true);
+	auto fd = dynamic_cast<FunctionData*>(func->_data);
+	//сохранить текущий контекст
+	int ptr, line, col;
+	auto cur = _tree->GetTreePtr();
+	_sc->GetPtrs(ptr, line, col);
+	//восстановить контекст функции
+	auto func_call = _tree->AddFunctionCall(func);
+	_sc->SetPtrs(fd->ptr, fd->line, fd->col);
+	//вычислить значение функции
+	CompoundBlock();
+	auto result = dynamic_cast<FunctionData*>(func_call->_data->Clone());
+	if(!result->is_return_operator_declarated && result->returned_type != SemanticType::Empty)
+	{
+		_tree->SemanticExit({ "Функция должна возвращать значение" });
+	}
+	//восстановить состояние программы до вызова
+	_tree->RemoveFunctionCall(func_call);
+	_tree->SetTreePtr(cur);
+	_sc->SetPtrs(ptr, line, col);
+	return result;
+}
+
 //type var |;
 //         |, var...;
 void PrintUpdate(std::string _event)

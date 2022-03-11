@@ -57,20 +57,46 @@ void SemanticTree::SetReturnedData(Data* returnedData) const
 
 //Получить значение переменной
 //или результата выоплнения функции
-Data* SemanticTree::GetNodeValue(std::vector<LexemaView> ids, bool isFunc) const
+Data* SemanticTree::GetNodeValue(std::vector<LexemaView> ids) const
 {
 	if (!isInterpreting)
 		return nullptr;
-	if (isFunc) {
-		auto func = dynamic_cast<FunctionData*>(GetNodeByView(ids, true)->_data);
-		return func->returned_data->Clone();
-	}
+
 	return GetNodeByView(ids)->_data->Clone();
+}
+
+Node* SemanticTree::AddFunctionCall(Node * func)
+{
+	Node* func_exec = new Node(func->_data->Clone());
+	Node* neib = func->GetNeighbor();
+	func_exec->AddNeighbor(neib);
+	if(neib)
+	{
+		neib->SetParent(func_exec);
+	}
+	func->_neighbor = func_exec;
+	func_exec->SetParent(func);
+	//func_exec->SetParent(func);
+	_current = func_exec;
+	return func_exec;
+}
+
+void SemanticTree::RemoveFunctionCall(Node* func_call)
+{
+	Node* func = func_call->GetParent();
+	Node* neib = func_call->GetNeighbor();
+	if(neib)
+	{
+		neib->SetParent(func);
+	}
+	func->_neighbor = neib;
+	func_call->_neighbor = nullptr;
+	delete func_call;
 }
 
 void SemanticTree::RemoveObject(Node* node)
 {
-	if(isInterpreting)
+	if (isInterpreting)
 		BaseTree::RemoveObject(node);
 }
 
@@ -84,6 +110,10 @@ void SemanticTree::SetTreePtr(Node* current)
 {
 	if (isInterpreting)
 		BaseTree::SetTreePtr(current);
+}
+Node * SemanticTree::GetTreePtr()
+{
+	return _current;
 }
 
 std::string SemanticTree::GetFullName(Node* node)
@@ -307,8 +337,8 @@ Data* SemanticTree::GetConstData(const LexemaView& lv, LexType lt) const
 			else
 				SemanticExit({ "Константа слишком велика" });
 		break;
-		default: 			
-			SemanticExit({ "Тип константы \"", lv, "\" не определен"});
+	default:
+		SemanticExit({ "Тип константы \"", lv, "\" не определен" });
 
 	}
 	return result;
@@ -412,13 +442,13 @@ Data* SemanticTree::CalculateFloatValue(Data* _a, Data* _b, LexType sign) const
 }
 Data* SemanticTree::CalculateShortIntValue(Data* a, Data* b, LexType sign) const
 {
-	if(a->type == SemanticType::Float || b->type == SemanticType::Float)
+	if (a->type == SemanticType::Float || b->type == SemanticType::Float)
 		SemanticExit({ "Ошибка приведения типов (один из операндов имеет тип ", TypesName.find(SemanticType::Float)->second,
 			" а результат определен как  ", TypesName.find(SemanticType::ShortInt)->second });
 
 	Data* c = new Data();
 	c->type = SemanticType::ShortInt;
-	int res =  a->value.short_int_value;
+	int res = a->value.short_int_value;
 	bool is_wrong_b = false;
 	switch (sign)
 	{
@@ -437,8 +467,8 @@ Data* SemanticTree::CalculateShortIntValue(Data* a, Data* b, LexType sign) const
 		res *= b->value.short_int_value;
 		break;
 	case LexType::ModSign:
-		if(b->value.short_int_value == 0)
-			SemanticExit({ "Ошибка: Деление с остатком на 0"});
+		if (b->value.short_int_value == 0)
+			SemanticExit({ "Ошибка: Деление с остатком на 0" });
 		res %= b->value.short_int_value;
 		break;
 	case LexType::ShiftLeft:
@@ -495,7 +525,7 @@ Data* SemanticTree::CalculateShortIntLogic(Data* a, Data* b, LexType sign) const
 
 	if (a->type == SemanticType::Float || b->type == SemanticType::Float)
 		SemanticExit({ "Ошибка приведения типов (один из операндов имеет тип ", TypesName.find(SemanticType::Float)->second,
-			" а результат определен как  ", TypesName.find(SemanticType::ShortInt)->second, ")"});
+			" а результат определен как  ", TypesName.find(SemanticType::ShortInt)->second, ")" });
 
 	bool res;
 	short int short_val = a->value.short_int_value;
@@ -551,7 +581,7 @@ Data* SemanticTree::UnaryOperation(Data* a, LexType sign)
 		return nullptr;
 	IsEnableUnaryOperation(a->type);
 	Data* d = new Data(*a);
-	switch(d->type)
+	switch (d->type)
 	{
 	case SemanticType::Float:
 		if (sign == LexType::Plus)

@@ -1,4 +1,14 @@
-float o = 24 * (-45e0) ;
+int c = 1;
+int a(){
+	c = c + 11;
+	return c;
+}
+int main(){
+	c = 10;
+	a();
+	return 2;
+}
+/*float o = 24 * (-45e0) ;
 class C{
 	int a = 1, b = 2;
 	float sd = -1e2;

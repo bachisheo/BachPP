@@ -29,6 +29,7 @@ private:
 	void LexExit(LexType waitingLex) const;
 	void DeclareInFunction();
 	void FunctionDeclare();
+	Data * FunctionExecute(std::vector<LexemaView> ids);
 	void DataDeclare();
 	std::vector<LexemaView> GetFullName();
 	SemanticType ScanType(LexemaView& lv) const;

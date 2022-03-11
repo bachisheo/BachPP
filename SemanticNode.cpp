@@ -107,6 +107,12 @@ LexemaView FunctionData::GetValueView() const
 FunctionData* FunctionData::Clone() const
 {
 	FunctionData* clone = new FunctionData(returned_type, id);
+	clone->line = line;
+	clone->ptr = ptr;
+	clone->col = col;
+	clone->is_return_operator_declarated = is_return_operator_declarated;
+	clone->returned_data = returned_data->Clone();
+	clone->value = value;
 	return clone;
 }
 
@@ -153,9 +159,9 @@ Node* Node::GetChild() const
 
 Node* Node::AddNeighbor(Data* data)
 {
-	return  SetNeighbor(new Node(data));
+	return  AddNeighbor(new Node(data));
 }
-Node* Node::SetNeighbor(Node* neighbor)
+Node* Node::AddNeighbor(Node* neighbor)
 {
 	if (neighbor == nullptr)
 		return  nullptr;

@@ -17,7 +17,7 @@ Node* BaseTree::CopySubtree(Node* sub_root)
 	}
 	Node* new_root = new Node(sub_root->_data->Clone());
 	new_root->SetChild(CopySubtree(sub_root->GetChild()));
-	new_root->SetNeighbor(CopySubtree(sub_root->GetNeighbor()));
+	new_root->AddNeighbor(CopySubtree(sub_root->GetNeighbor()));
 	return new_root;
 }
 void BaseTree::RemoveObject(Node* node)
