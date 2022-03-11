@@ -1,7 +1,7 @@
 п»ї#pragma once
 #include "BaseTree.h"
 
-class SemanticTree : public BaseTree
+class SemanticTree : protected BaseTree
 {
 	Scanner* _sc;
 	bool IsDataType(SemanticType type) const;
@@ -13,9 +13,7 @@ public:
 	bool isInterpreting = true;
 	SemanticTree(Scanner* sc);
 	void SemanticExit(const std::vector<std::string> & errMsg) const;
-	bool IsInOperator() const;
 	Node* FindCurrentFunc() const;
-
 	static SemanticType GetType(LexType type_type, LexType next_type);
 	SemanticType GetType(LexType type_type, const LexemaView& type_view) const;
 	void CheckUnique(const LexemaView& lv) const;
@@ -28,17 +26,21 @@ public:
 	Data * UnaryOperation(Data * a, LexType sign);
 	Data * LogicalOperation(Data * a, Data * b, LexType sign);
 	bool IsEnableUnaryOperation(SemanticType type) const;
-	bool IsComparableType(SemanticType realType, SemanticType neededType);
 
 	Node* AddVariableObject(Data * data);
 	Node* AddFunctionDeclare(SemanticType returnedType, const LexemaView& funcName);
 	Node* AddClass(const LexemaView& className);
 	Node* AddCompoundBlock();
 	Node* AddClassObject(const LexemaView& objName, const LexemaView& className);
-	void CheckWhileExp(Data* data);
-	void SetReturnedData(Data* data);
-	Data* GetNodeValue(std::vector<LexemaView> ids, bool isFunc = false);
+	void CheckWhileExp(Data* data) const;
+	void SetReturnedData(Data* data) const;
+	Data* GetNodeValue(std::vector<LexemaView> ids, bool isFunc = false) const;
+//BaseTree overriting mathods
+	void RemoveObject(Node* node);
+	void Print(std::ostream& out) const;
+	void SetTreePtr(Node* current);
 private:
+	bool IsComparableType(SemanticType realType, SemanticType neededType) const;
 	std::string GetFullName(Node* node);
 };
 

@@ -360,26 +360,29 @@ void SyntacticalAnalyzer::DeclareInFunction()
 //          |--main  --|
 void SyntacticalAnalyzer::FunctionDeclare()
 {
+	bool isIntSaved = _tree->isInterpreting, isMain = true;
 	LexemaView func_name, type_view;
 	auto returned_type = ScanType(type_view);
 	if (returned_type == SemanticType::Undefined) {
 		_tree->SemanticExit({ "Тип \'" , type_view, "\' не определен" });
 	}
 	returned_type.id = type_view;
-	if (!ScanAndCheck(LexType::main, func_name, false))
+	if (!ScanAndCheck(LexType::main, func_name, false)) {
 		ScanAndCheck(LexType::Id, func_name);
+		isMain = false;
+	}
+	
 	//create node in tree, save ptr
 	auto func_node = _tree->AddFunctionDeclare(returned_type, func_name);
-	auto func_data = dynamic_cast<FunctionData*>(func_node->_data);
-
 	ScanAndCheck(LexType::LRoundBracket);
 	ScanAndCheck(LexType::RRoundBracket);
-	CompoundBlock();
-	if (!func_data->is_return_operator_declarated && func_data->returned_type != SemanticType::Void)
+	if(!isMain)
 	{
-		_tree->SemanticExit({ func_name,  " должна возвращать значение" });
+		_tree->isInterpreting = false;
 	}
+	CompoundBlock();
 	_tree->SetTreePtr(func_node);
+	_tree->isInterpreting = isIntSaved;
 }
 //type var |;
 //         |, var...;
