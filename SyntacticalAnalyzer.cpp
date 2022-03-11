@@ -37,6 +37,8 @@ void SyntacticalAnalyzer::Operator()
 		auto returnedData = Expression();
 		_tree->SetReturnedData(returnedData);
 		ScanAndCheck(LexType::DotComma);
+		if (_tree->isInterpreting)
+			_tree->isReturned = true;
 		break;
 	}
 	case LexType::Id:
@@ -263,7 +265,7 @@ Data* SyntacticalAnalyzer::ElementaryExpression()
 		}
 		else
 		{
-			result =  _tree->GetNodeValue(ids);
+			result = _tree->GetNodeValue(ids);
 		}
 		break;
 	}
@@ -273,7 +275,7 @@ Data* SyntacticalAnalyzer::ElementaryExpression()
 		ScanAndCheck(LexType::RRoundBracket);
 		break;
 	default:
-		_tree->SemanticExit({ "Ожидается операнд, но встречен \"" , LexTypesName.find(lexType)->second, "\""});
+		_tree->SemanticExit({ "Ожидается операнд, но встречен \"" , LexTypesName.find(lexType)->second, "\"" });
 	}
 	return result;
 }
@@ -386,10 +388,12 @@ void SyntacticalAnalyzer::FunctionDeclare()
 	_tree->isInterpreting = isIntSaved;
 }
 
-Data * SyntacticalAnalyzer::FunctionExecute(std::vector<LexemaView> ids)
+Data* SyntacticalAnalyzer::FunctionExecute(std::vector<LexemaView> ids)
 {
-	if (!_tree->isInterpreting)
+	if (!_tree->isWork())
 		return nullptr;
+	bool isReturn = _tree->isReturned;
+	_tree->isReturned = false;
 	//получить узел с описанием функции
 	auto func = _tree->GetNodeByView(ids, true);
 	auto fd = dynamic_cast<FunctionData*>(func->_data);
@@ -403,11 +407,12 @@ Data * SyntacticalAnalyzer::FunctionExecute(std::vector<LexemaView> ids)
 	//вычислить значение функции
 	CompoundBlock();
 	auto result = dynamic_cast<FunctionData*>(func_call->_data->Clone());
-	if(!result->is_return_operator_declarated && result->returned_type != SemanticType::Empty)
+	if (!result->is_return_operator_declarated && result->returned_type != SemanticType::Empty)
 	{
 		_tree->SemanticExit({ "Функция должна возвращать значение" });
 	}
 	//восстановить состояние программы до вызова
+	_tree->isReturned = isReturn;
 	_tree->RemoveFunctionCall(func_call);
 	_tree->SetTreePtr(cur);
 	_sc->SetPtrs(ptr, line, col);

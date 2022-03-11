@@ -11,6 +11,8 @@ class SemanticTree : protected BaseTree
 	Data * CalculateShortIntLogic(Data* a, Data* b, LexType sign) const;
 public:
 	bool isInterpreting = true;
+	bool isReturned = false;
+	bool isWork() const;
 	SemanticTree(Scanner* sc);
 	void SemanticExit(const std::vector<std::string> & errMsg) const;
 	Node* FindCurrentFunc() const;

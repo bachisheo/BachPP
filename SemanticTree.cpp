@@ -9,6 +9,11 @@ bool SemanticTree::IsDataType(SemanticType type) const
 }
 
 
+bool SemanticTree::isWork() const
+{
+	return isInterpreting && !isReturned;
+}
+
 SemanticTree::SemanticTree(Scanner* sc) :_sc(sc)
 {
 	_current = nullptr;
@@ -16,7 +21,7 @@ SemanticTree::SemanticTree(Scanner* sc) :_sc(sc)
 
 Node* SemanticTree::AddClassObject(const LexemaView& objName, const LexemaView& className)
 {
-	if (!isInterpreting)
+	if (!isWork())
 		return nullptr;
 	const auto classDeclaration = FindUp(className);
 	if (classDeclaration == nullptr)
@@ -33,7 +38,7 @@ Node* SemanticTree::AddClassObject(const LexemaView& objName, const LexemaView& 
 
 void SemanticTree::CheckWhileExp(Data* data) const
 {
-	if (!isInterpreting)
+	if (!isWork())
 		return;
 	if (!IsComparableType(data->type, SemanticType::ShortInt))
 	{
@@ -43,7 +48,7 @@ void SemanticTree::CheckWhileExp(Data* data) const
 
 void SemanticTree::SetReturnedData(Data* returnedData) const
 {
-	if (!isInterpreting)
+	if (!isWork())
 		return;
 	auto func = FindCurrentFunc();
 	auto func_data = dynamic_cast<FunctionData*>(func->_data);
@@ -59,7 +64,7 @@ void SemanticTree::SetReturnedData(Data* returnedData) const
 //или результата выоплнения функции
 Data* SemanticTree::GetNodeValue(std::vector<LexemaView> ids) const
 {
-	if (!isInterpreting)
+	if (!isWork())
 		return nullptr;
 
 	return GetNodeByView(ids)->_data->Clone();
@@ -96,19 +101,19 @@ void SemanticTree::RemoveFunctionCall(Node* func_call)
 
 void SemanticTree::RemoveObject(Node* node)
 {
-	if (isInterpreting)
+	if (isWork())
 		BaseTree::RemoveObject(node);
 }
 
 void SemanticTree::Print(std::ostream& out) const
 {
-	if (isInterpreting)
+	if (isWork())
 		BaseTree::Print(out);
 }
 
 void SemanticTree::SetTreePtr(Node* current)
 {
-	if (isInterpreting)
+	if (isWork())
 		BaseTree::SetTreePtr(current);
 }
 Node * SemanticTree::GetTreePtr()
@@ -133,7 +138,7 @@ std::string SemanticTree::GetFullName(Node* node)
 
 Node* SemanticTree::AddVariableObject(Data* data)
 {
-	if (!isInterpreting)
+	if (!isWork())
 		return nullptr;
 	CheckUnique(data->id);
 	if (_root == nullptr)
@@ -150,7 +155,7 @@ Node* SemanticTree::AddVariableObject(Data* data)
 
 Node* SemanticTree::AddFunctionDeclare(SemanticType returnedType, const LexemaView& funcName)
 {
-	if (!isInterpreting)
+	if (!isWork())
 		return nullptr;
 	CheckUnique(funcName);
 	auto func_node = AddVariableObject(new FunctionData(returnedType, funcName));
@@ -163,7 +168,7 @@ Node* SemanticTree::AddFunctionDeclare(SemanticType returnedType, const LexemaVi
 
 Node* SemanticTree::AddClass(const LexemaView& className)
 {
-	if (!isInterpreting)
+	if (!isWork())
 		return nullptr;
 	CheckUnique(className);
 	SemanticType type = SemanticType::Class;
@@ -174,7 +179,7 @@ Node* SemanticTree::AddClass(const LexemaView& className)
 
 Node* SemanticTree::AddCompoundBlock()
 {
-	if (!isInterpreting)
+	if (!isWork())
 		return nullptr;
 	const auto block = new Node(new Data(SemanticType::Empty, "emptyNode"));
 	_current->SetChild(block);
@@ -193,7 +198,7 @@ void SemanticTree::SemanticExit(const std::vector<std::string>& errMsg) const
 
 Node* SemanticTree::FindCurrentFunc() const
 {
-	if (!isInterpreting)
+	if (!isWork())
 		return nullptr;
 	auto func_node = _current;
 
@@ -253,7 +258,7 @@ SemanticType SemanticTree::GetType(LexType type_type, const LexemaView& type_vie
 ///
 void SemanticTree::CheckUnique(const LexemaView& lv) const
 {
-	if (!isInterpreting)
+	if (!isWork())
 		return;
 	auto n = FindUpOnLevel(lv);
 	if (n != nullptr)
@@ -277,7 +282,7 @@ std::string StringNameByView(std::vector<LexemaView> ids)
 
 Node* SemanticTree::GetNodeByView(std::vector<LexemaView>& ids, bool isFunc) const
 {
-	if (!isInterpreting)
+	if (!isWork())
 		return nullptr;
 	auto node = FindUp(ids[0]);
 	//?
@@ -314,7 +319,7 @@ int numberStrCmp(std::string a, std::string b)
 }
 Data* SemanticTree::GetConstData(const LexemaView& lv, LexType lt) const
 {
-	if (!isInterpreting)
+	if (!isWork())
 		return nullptr;
 	Data* result = new Data();
 	switch (lt)
@@ -346,7 +351,7 @@ Data* SemanticTree::GetConstData(const LexemaView& lv, LexType lt) const
 
 void SemanticTree::SetData(Node* dst, Data* src)
 {
-	if (!isInterpreting)
+	if (!isWork())
 		return;
 	if (!IsComparableType(dst->_data->type, src->type))
 	{
@@ -387,7 +392,7 @@ void SemanticTree::SetData(Node* dst, Data* src)
 /// <returns>Тип результата выполнения операции</returns>
 SemanticType SemanticTree::GetResultType(SemanticType a, SemanticType b, LexType sign)
 {
-	if (!isInterpreting)
+	if (!isWork())
 		return SemanticType::Empty;
 	if (a == SemanticType::Undefined || b == SemanticType::Undefined)
 	{
@@ -561,7 +566,7 @@ Data* SemanticTree::CalculateShortIntLogic(Data* a, Data* b, LexType sign) const
 
 Data* SemanticTree::BinaryOperation(Data* a, Data* b, LexType sign)
 {
-	if (!isInterpreting)
+	if (!isWork())
 		return nullptr;
 	const auto type = GetResultType(a->type, b->type, sign);
 	switch (type)
@@ -577,7 +582,7 @@ Data* SemanticTree::BinaryOperation(Data* a, Data* b, LexType sign)
 
 Data* SemanticTree::UnaryOperation(Data* a, LexType sign)
 {
-	if (!isInterpreting)
+	if (!isWork())
 		return nullptr;
 	IsEnableUnaryOperation(a->type);
 	Data* d = new Data(*a);
@@ -603,7 +608,7 @@ Data* SemanticTree::UnaryOperation(Data* a, LexType sign)
 
 Data* SemanticTree::LogicalOperation(Data* a, Data* b, LexType sign)
 {
-	if (!isInterpreting)
+	if (!isWork())
 		return nullptr;
 	const auto type = GetResultType(a->type, b->type, sign);
 	switch (type)
