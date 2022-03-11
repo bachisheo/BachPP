@@ -107,9 +107,9 @@ void SemanticTree::RemoveObject(Node* node)
 
 void SemanticTree::Print(std::ostream& out) const
 {
-	if (isWork())
-		BaseTree::Print(out);
+	BaseTree::Print(out);
 }
+
 
 void SemanticTree::SetTreePtr(Node* current)
 {

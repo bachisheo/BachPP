@@ -11,7 +11,6 @@
 class SyntacticalAnalyzer
 {
 public:
-	bool isInterpret = false;
 	SyntacticalAnalyzer(Scanner* sc);
 	//аксиома S
 	void Program(LexType endLex = LexType::End);
@@ -42,5 +41,6 @@ private:
 	Data* ElementaryExpression();
 	void Operator();
 	void CompoundBlock();
+	void WhileExecute();
 };
 

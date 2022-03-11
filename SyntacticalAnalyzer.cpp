@@ -23,12 +23,7 @@ void SyntacticalAnalyzer::Operator()
 	//while с предусловием
 	case LexType::While: {
 		_sc->Scan();
-		ScanAndCheck(LexType::LRoundBracket);
-		//условие
-		auto data = Expression();
-		_tree->CheckWhileExp(data);
-		ScanAndCheck(LexType::RRoundBracket);
-		Operator();
+		WhileExecute();
 		break;
 	}
 	case LexType::Return: {
@@ -80,6 +75,25 @@ void SyntacticalAnalyzer::CompoundBlock()
 	ScanAndCheck(LexType::RFigBracket);
 	_tree->SetTreePtr(block_ptr);
 	_tree->RemoveObject(block_ptr);
+}
+
+void SyntacticalAnalyzer::WhileExecute()
+{
+	int ptr, col, line;
+	_sc->GetPtrs(ptr, line, col);
+	bool savedInt = _tree->isInterpreting;
+	while_body:
+	_sc->SetPtrs(ptr, line, col);
+	ScanAndCheck(LexType::LRoundBracket);
+	//условие
+	auto data = Expression();
+	_tree->CheckWhileExp(data);
+	_tree->isInterpreting = data->value.short_int_value && _tree->isWork();
+	ScanAndCheck(LexType::RRoundBracket);
+	Operator();
+	if(_tree->isInterpreting) 
+		goto while_body;
+	_tree->isInterpreting = savedInt;
 }
 
 //просканировать на k символов вперед без 
@@ -392,7 +406,6 @@ Data* SyntacticalAnalyzer::FunctionExecute(std::vector<LexemaView> ids)
 {
 	if (!_tree->isWork())
 		return nullptr;
-	bool isReturn = _tree->isReturned;
 	_tree->isReturned = false;
 	//получить узел с описанием функции
 	auto func = _tree->GetNodeByView(ids, true);
@@ -412,11 +425,11 @@ Data* SyntacticalAnalyzer::FunctionExecute(std::vector<LexemaView> ids)
 		_tree->SemanticExit({ "Функция должна возвращать значение" });
 	}
 	//восстановить состояние программы до вызова
-	_tree->isReturned = isReturn;
+	_tree->isReturned = false;
 	_tree->RemoveFunctionCall(func_call);
 	_tree->SetTreePtr(cur);
 	_sc->SetPtrs(ptr, line, col);
-	return result;
+	return result->returned_data;
 }
 
 //type var |;

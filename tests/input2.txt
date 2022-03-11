@@ -1,4 +1,7 @@
 int a = 3;
 int b = a + 2;
+int aa(){
+return 1;
+}
 int main(){
 }
