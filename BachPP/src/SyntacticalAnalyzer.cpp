@@ -13,21 +13,21 @@ void SyntacticalAnalyzer::Operator()
 	auto nextLex = LookForward();
 	switch (nextLex) {
 	case LexType::DotComma: _sc->Scan(); break;
-		//Р±Р»РѕРє
+		//блок
 	case LexType::LFigBracket:
 	{
 		CompoundBlock();
 		break;
 	}
 
-	//while СЃ РїСЂРµРґСѓСЃР»РѕРІРёРµРј
+	//while с предусловием
 	case LexType::While: {
 		_sc->Scan();
 		WhileExecute();
 		break;
 	}
 	case LexType::Return: {
-		// todo РїРѕРґРЅРёРјР°С‚СЊ С„Р»Р°Рі СЂРµС‚СѓСЂРЅР° С‚РѕР»СЊРєРѕ РµСЃР»Рё РѕРЅ РІС‹Р·РІР°РЅ РЅРµ РІ РѕРїРµСЂР°С‚РѕСЂРµ 
+		// todo поднимать флаг ретурна только если он вызван не в операторе 
 		_sc->Scan();
 		auto returnedData = Expression();
 		_tree->SetReturnedData(returnedData);
@@ -43,7 +43,7 @@ void SyntacticalAnalyzer::Operator()
 		_sc->GetPtrs(a, b, c);
 		auto full_name = GetFullName();
 		Node* destination = _tree->GetNodeByView(full_name);
-		//РїСЂРёСЃРІР°РёРІР°РЅРёРµ
+		//присваивание
 		if (LookForward() == LexType::Equal)
 		{
 			ScanAndCheck(LexType::Equal);
@@ -51,8 +51,8 @@ void SyntacticalAnalyzer::Operator()
 		}
 		else
 		{
-			//РµСЃР»Рё СЌС‚Рѕ РїСЂРѕСЃС‚Рѕ РІС‹Р·РѕРІ РѕРїРµСЂР°РЅРґРѕРІ, С‚Рѕ РёРјСЏ СЃС‡РёС‚Р°РµС‚СЃСЏ РїРѕРІС‚РѕСЂРЅРѕ
-			//РІ СЌР»РµРјРµРЅС‚Р°СЂРЅРѕРј РІС‹СЂР°Р¶РµРЅРёРё, РїРѕСЌС‚РѕРјСѓ РІРѕР·РІСЂР°С‰Р°РµРј СѓРєР°Р·Р°С‚РµР»СЊ
+			//если это просто вызов операндов, то имя считается повторно
+			//в элементарном выражении, поэтому возвращаем указатель
 			_sc->SetPtrs(a, b, c);
 		}
 		auto exprResult = Expression();
@@ -63,7 +63,7 @@ void SyntacticalAnalyzer::Operator()
 		ScanAndCheck(LexType::DotComma);
 		break;
 	}
-	default:_tree->SemanticExit({ "РћС€РёР±РѕС‡РЅР°СЏ РѕРїРµСЂР°С†РёСЏ" });
+	default:_tree->SemanticExit({ "Ошибочная операция" });
 	}
 }
 // --{ declInFunc } --
@@ -85,7 +85,7 @@ void SyntacticalAnalyzer::WhileExecute()
 	while_body:
 	_sc->SetPtrs(ptr, line, col);
 	ScanAndCheck(LexType::LRoundBracket);
-	//СѓСЃР»РѕРІРёРµ
+	//условие
 	auto data = Expression();
 	_tree->CheckWhileExp(data);
 	_tree->isInterpreting = data->value.short_int_value && _tree->isWork();
@@ -96,8 +96,8 @@ void SyntacticalAnalyzer::WhileExecute()
 	_tree->isInterpreting = savedInt;
 }
 
-//РїСЂРѕСЃРєР°РЅРёСЂРѕРІР°С‚СЊ РЅР° k СЃРёРјРІРѕР»РѕРІ РІРїРµСЂРµРґ Р±РµР· 
-//РёР·РјРµРЅРµРЅРёСЏ СѓРєР°Р·Р°С‚РµР»РµР№ СЃРєР°РЅРµСЂР°
+//просканировать на k символов вперед без 
+//изменения указателей сканера
 LexType SyntacticalAnalyzer::LookForward(size_t k)
 {
 	LexemaView lv;
@@ -118,8 +118,8 @@ LexType SyntacticalAnalyzer::LookForward(size_t k, LexemaView& lv)
 	return lex;
 }
 
-//СЃС‡РёС‚С‹РІР°РµС‚ Р»РµРєСЃРµРјСѓ Рё РІРѕР·РІСЂР°С‰Р°РµС‚ СѓРєР°Р·Р°С‚РµР»СЊ РЅР° РїСЂРµР¶РЅРµРµ РјРµСЃС‚Рѕ,
-//РµСЃР»Рё Р»РµРєСЃРµРјР° РЅРµ СЂР°РІРЅР° Р·Р°РґР°РЅРЅРѕР№
+//считывает лексему и возвращает указатель на прежнее место,
+//если лексема не равна заданной
 bool SyntacticalAnalyzer::ScanAndCheck(LexType neededLex, LexemaView& lv, bool needMsg)
 {
 	int _ptr, _col, _line;
@@ -139,8 +139,8 @@ bool SyntacticalAnalyzer::ScanAndCheck(LexType neededLex, bool needMsg)
 	return ScanAndCheck(neededLex, lv, needMsg);
 }
 
-//РџРѕР»СѓС‡РёС‚СЊ РїРѕР»РЅРѕРµ РїСЂРё РѕР±СЂР°С‰РµРЅРёРё РІРёРґР° a.b.c...
-//РёР·РјРµРЅСЏРµС‚ СѓРєР°Р·Р°С‚РµР»СЊ
+//Получить полное при обращении вида a.b.c...
+//изменяет указатель
 std::vector<LexemaView> SyntacticalAnalyzer::GetFullName()
 {
 	auto ids = std::vector<LexemaView>();
@@ -271,7 +271,7 @@ Data* SyntacticalAnalyzer::ElementaryExpression()
 	case LexType::Id: {
 		auto ids = GetFullName();
 		lexType = LookForward();
-		//РµСЃР»Рё РїСЂРѕРёСЃС…РѕРґРёС‚ РІС‹Р·РѕРІ С„СѓРЅРєС†РёРё
+		//если происходит вызов функции
 		if (lexType == LexType::LRoundBracket) {
 			_sc->Scan();
 			ScanAndCheck(LexType::RRoundBracket);
@@ -289,7 +289,7 @@ Data* SyntacticalAnalyzer::ElementaryExpression()
 		ScanAndCheck(LexType::RRoundBracket);
 		break;
 	default:
-		_tree->SemanticExit({ "РћР¶РёРґР°РµС‚СЃСЏ РѕРїРµСЂР°РЅРґ, РЅРѕ РІСЃС‚СЂРµС‡РµРЅ \"" , LexTypesName.find(lexType)->second, "\"" });
+		_tree->SemanticExit({ "Ожидается операнд, но встречен \"" , LexTypesName.find(lexType)->second, "\"" });
 	}
 	return result;
 }
@@ -309,8 +309,8 @@ void SyntacticalAnalyzer::Program(LexType endLex)
 			_sc->GetPtrs(_ptr, _line, _col);
 			LexemaView type_view;
 			if (ScanType(type_view) == SemanticType::Undefined)
-				_tree->SemanticExit({ "РўРёРї \'" , type_view, "\' РЅРµ РѕРїСЂРµРґРµР»РµРЅ" });
-			//РїРѕР»СѓС‡РёС‚СЊ СЃР»РµРґСѓСЋС‰СѓСЋ Р·Р° id Р»РµРєСЃРµРјСѓ
+				_tree->SemanticExit({ "Тип \'" , type_view, "\' не определен" });
+			//получить следующую за id лексему
 			nextLex = LookForward(2);
 			_sc->SetPtrs(_ptr, _line, _col);
 			if (nextLex == LexType::LRoundBracket)
@@ -380,7 +380,7 @@ void SyntacticalAnalyzer::FunctionDeclare()
 	LexemaView func_name, type_view;
 	auto returned_type = ScanType(type_view);
 	if (returned_type == SemanticType::Undefined) {
-		_tree->SemanticExit({ "РўРёРї \'" , type_view, "\' РЅРµ РѕРїСЂРµРґРµР»РµРЅ" });
+		_tree->SemanticExit({ "Тип \'" , type_view, "\' не определен" });
 	}
 	returned_type.id = type_view;
 	if (!ScanAndCheck(LexType::main, func_name, false)) {
@@ -407,24 +407,24 @@ Data* SyntacticalAnalyzer::FunctionExecute(std::vector<LexemaView> ids)
 	if (!_tree->isWork())
 		return nullptr;
 	_tree->isReturned = false;
-	//РїРѕР»СѓС‡РёС‚СЊ СѓР·РµР» СЃ РѕРїРёСЃР°РЅРёРµРј С„СѓРЅРєС†РёРё
+	//получить узел с описанием функции
 	auto func = _tree->GetNodeByView(ids, true);
 	auto fd = dynamic_cast<FunctionData*>(func->_data);
-	//СЃРѕС…СЂР°РЅРёС‚СЊ С‚РµРєСѓС‰РёР№ РєРѕРЅС‚РµРєСЃС‚
+	//сохранить текущий контекст
 	int ptr, line, col;
 	auto cur = _tree->GetTreePtr();
 	_sc->GetPtrs(ptr, line, col);
-	//РІРѕСЃСЃС‚Р°РЅРѕРІРёС‚СЊ РєРѕРЅС‚РµРєСЃС‚ С„СѓРЅРєС†РёРё
+	//восстановить контекст функции
 	auto func_call = _tree->AddFunctionCall(func);
 	_sc->SetPtrs(fd->ptr, fd->line, fd->col);
-	//РІС‹С‡РёСЃР»РёС‚СЊ Р·РЅР°С‡РµРЅРёРµ С„СѓРЅРєС†РёРё
+	//вычислить значение функции
 	CompoundBlock();
 	auto result = dynamic_cast<FunctionData*>(func_call->_data->Clone());
 	if (!result->is_return_operator_declarated && result->returned_type != SemanticType::Empty)
 	{
-		_tree->SemanticExit({ "Р¤СѓРЅРєС†РёСЏ РґРѕР»Р¶РЅР° РІРѕР·РІСЂР°С‰Р°С‚СЊ Р·РЅР°С‡РµРЅРёРµ" });
+		_tree->SemanticExit({ "Функция должна возвращать значение" });
 	}
-	//РІРѕСЃСЃС‚Р°РЅРѕРІРёС‚СЊ СЃРѕСЃС‚РѕСЏРЅРёРµ РїСЂРѕРіСЂР°РјРјС‹ РґРѕ РІС‹Р·РѕРІР°
+	//восстановить состояние программы до вызова
 	_tree->isReturned = false;
 	_tree->RemoveFunctionCall(func_call);
 	_tree->SetTreePtr(cur);
@@ -443,7 +443,7 @@ void SyntacticalAnalyzer::DataDeclare()
 	LexemaView type_view, var_name, value_view;
 	const auto current_type = ScanType(type_view);
 	if (current_type == SemanticType::Undefined)
-		_tree->SemanticExit({ "РўРёРї \'" , type_view, "\' РЅРµ РѕРїСЂРµРґРµР»РµРЅ" });
+		_tree->SemanticExit({ "Тип \'" , type_view, "\' не определен" });
 	//read first variable name
 	ScanAndCheck(LexType::Id, var_name);
 	Node* variable;

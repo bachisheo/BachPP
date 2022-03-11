@@ -9,7 +9,7 @@ union DataValue
 	Node* object_of_class;
 };
 /// <summary>
-/// РЎС‚СЂСѓРєС‚СѓСЂР°, РѕРїРёСЃС‹РІР°СЋС‰Р°СЏ СЃРѕРґРµСЂР¶РёРјРѕРµ СѓР·Р»Р° РґРµСЂРµРІР°
+/// Структура, описывающая содержимое узла дерева
 /// </summary>
 struct Data {
 	SemanticType type = SemanticType::Undefined;
@@ -24,7 +24,7 @@ struct Data {
 	void SetValue(float v);
 };
 /// <summary>
-/// РЎС‚СЂСѓРєС‚СѓСЂР° РґР»СЏ СѓР·Р»Р° СЃ РѕРїРёСЃР°РЅРёРµРј С„СѓРЅРєС†РёРё
+/// Структура для узла с описанием функции
 /// </summary>
 struct FunctionData : Data
 {

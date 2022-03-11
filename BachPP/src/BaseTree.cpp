@@ -1,11 +1,11 @@
-п»ї#include "BaseTree.h"
+﻿#include "BaseTree.h"
 void BaseTree::Print(std::ostream& out) const
 {
-	out << "\n--------------------------РџРѕР»СѓС‡РёРІС€РµРµСЃСЏ РґРµСЂРµРІРѕ";
+	out << "\n--------------------------Получившееся дерево";
 	if (_root)
 		_root->Print(out, 0);
 	else
-		out << "\nРґРµСЂРµРІРѕ РїСѓСЃС‚Рѕ\n";
+		out << "\nдерево пусто\n";
 
 	
 }

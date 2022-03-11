@@ -1,4 +1,4 @@
-п»ї#pragma once
+﻿#pragma once
 #include "SemanticNode.h"
 
 class BaseTree
@@ -15,13 +15,13 @@ public:
 	static Node* CopySubtree(Node* sub_root);
 	void SetTreePtr(Node* current);
 	void RemoveObject(Node* node);
-	//РїРѕРёСЃРє РЅР° СѓСЂРѕРІРЅРµ
+	//поиск на уровне
 	Node* FindUpOnLevel(const LexemaView& id) const;
 	Node* FindUp(const LexemaView& id) const;
 	static Node* FindUpOnLevel(Node* from, const LexemaView& id);
 	static Node* FindUp(Node* from, const LexemaView& id);
 
-	//РїРѕРёСЃРє СЃСЂРµРґРё РїРѕС‚РѕРјРєРѕРІ
+	//поиск среди потомков
 	Node* FindChild(const LexemaView& id) const;
 	static Node* FindChild(const Node* from, const LexemaView& id);
 

@@ -129,7 +129,7 @@ LexType Scanner::ScanCode(LexemaView& lex)
 				col++;
 			}
 			if (!IsDigit(t[ptr])) {
-				ErrorMsg(MSG_ID::WAIT_TYPE, line, col, { "С‡РёСЃР»Рѕ" });
+				ErrorMsg(MSG_ID::WAIT_TYPE, line, col, { "число" });
 				return LexType::Error;
 			}
 			ScanNumber(lex, len);
@@ -250,22 +250,22 @@ const char* Scanner::GetText()
 void Scanner::ErrorMsg(MSG_ID id, int str, int col, const std::vector<std::string>& params)
 {
 	switch (id) {
-	case MSG_ID::LONG_LEX: std::cout << "\nР›РµРєСЃРµРјР° Р±РѕР»СЊС€Рµ 10 СЃРёРјРІРѕР»РѕРІ!"; break;
+	case MSG_ID::LONG_LEX: std::cout << "\nЛексема больше 10 символов!"; break;
 	case MSG_ID::WAIT_TYPE:
-		std::cout << "\nР”Р»СЏ РґР°РЅРЅРѕРіРѕ С‚РёРїР° Р»РµРєСЃРµРјС‹ РѕР¶РёРґР°РµС‚СЃСЏ: \"";
+		std::cout << "\nДля данного типа лексемы ожидается: \"";
 		for (auto next : params)
 			std::cout << "\'" << next << "\',  ";
 		break;
 	case MSG_ID::SYNT_ERR:
-		std::cout << "\nР”Р»СЏ РґР°РЅРЅРѕРіРѕ СЃРёРЅС‚Р°РєСЃРёСЃР° РѕР¶РёРґР°РµС‚СЃСЏ: \"";
+		std::cout << "\nДля данного синтаксиса ожидается: \"";
 		for (auto next : params)
 			std::cout << "\'" << next << "\',  ";
 		break;
 	case MSG_ID::SEM_ERR:
-		std::cout << "\nРЎРµРјР°РЅС‚РёС‡РµСЃРєР°СЏ РѕС€РёР±РєР°: \"";
+		std::cout << "\nСемантическая ошибка: \"";
 		for (auto next : params)
 			std::cout << " " << next;
 		break;
 	}
-	std::cout << "\" РЎС‚СЂРѕРєР° " << str << " СЃРёРјРІРѕР» " << col << std::endl;
+	std::cout << "\" Строка " << str << " символ " << col << std::endl;
 }

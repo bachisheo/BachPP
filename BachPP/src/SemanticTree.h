@@ -1,4 +1,4 @@
-п»ї#pragma once
+﻿#pragma once
 #include "BaseTree.h"
 
 class SemanticTree : protected BaseTree
