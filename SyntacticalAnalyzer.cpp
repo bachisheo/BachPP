@@ -26,10 +26,7 @@ void SyntacticalAnalyzer::Operator()
 		ScanAndCheck(LexType::LRoundBracket);
 		//условие
 		auto data = Expression();
-		if (!_tree->IsComparableType(data->type, SemanticType::ShortInt))
-		{
-			_tree->SemanticExit({ "Недопустимое условие для 'while'" });
-		}
+		_tree->CheckWhileExp(data);
 		ScanAndCheck(LexType::RRoundBracket);
 		Operator();
 		break;
@@ -38,14 +35,7 @@ void SyntacticalAnalyzer::Operator()
 		// todo поднимать флаг ретурна только если он вызван не в операторе 
 		_sc->Scan();
 		auto returnedData = Expression();
-		auto func = _tree->FindCurrentFunc();
-		auto func_data = dynamic_cast<FunctionData*>(func->_data);
-		func_data->is_return_operator_declarated = true;
-		if (!_tree->IsComparableType(returnedData->type, func_data->returned_type))
-		{
-			_tree->SemanticExit({ "Тип возвращаемого значения не соответсвует объявленному" });
-		}
-		func_data->returned_data = returnedData;
+		_tree->SetReturnedData(returnedData);
 		ScanAndCheck(LexType::DotComma);
 		break;
 	}
@@ -268,16 +258,12 @@ Data* SyntacticalAnalyzer::ElementaryExpression()
 		//если происходит вызов функции
 		if (lexType == LexType::LRoundBracket) {
 			_sc->Scan();
-			//проверить, есть ли такая функция и вернуть ее значение
-			auto func = dynamic_cast<FunctionData*>(_tree->GetNodeByView(ids, true)->_data);
-			result = func->returned_data;
+			result = _tree->GetNodeValue(ids, true);
 			ScanAndCheck(LexType::RRoundBracket);
 		}
 		else
-			//при обращении к переменной
 		{
-			//проверить, есть ли такая переменная и вернуть ее тип и значение
-			result = _tree->GetNodeByView(ids)->_data->Clone();
+			result =  _tree->GetNodeValue(ids);
 		}
 		break;
 	}

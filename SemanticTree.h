@@ -35,6 +35,9 @@ public:
 	Node* AddClass(const LexemaView& className);
 	Node* AddCompoundBlock();
 	Node* AddClassObject(const LexemaView& objName, const LexemaView& className);
+	void CheckWhileExp(Data* data);
+	void SetReturnedData(Data* data);
+	Data* GetNodeValue(std::vector<LexemaView> ids, bool isFunc = false);
 private:
 	std::string GetFullName(Node* node);
 };

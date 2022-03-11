@@ -29,6 +29,37 @@ Node* SemanticTree::AddClassObject(const LexemaView& objName, const LexemaView& 
 	return obj;
 }
 
+void SemanticTree::CheckWhileExp(Data* data)
+{
+	if (!IsComparableType(data->type, SemanticType::ShortInt))
+	{
+		SemanticExit({ "Недопустимое условие для 'while'" });
+	}
+}
+
+void SemanticTree::SetReturnedData(Data* returnedData)
+{
+	auto func = FindCurrentFunc();
+	auto func_data = dynamic_cast<FunctionData*>(func->_data);
+	func_data->is_return_operator_declarated = true;
+	if (!IsComparableType(returnedData->type, func_data->returned_type))
+	{
+		SemanticExit({ "Тип возвращаемого значения не соответсвует объявленному" });
+	}
+	func_data->returned_data = returnedData;
+}
+
+//Получить значение переменной
+//или результата выоплнения функции
+Data* SemanticTree::GetNodeValue(std::vector<LexemaView> ids, bool isFunc)
+{
+	if (isFunc) {
+		auto func = dynamic_cast<FunctionData*>(GetNodeByView(ids, true)->_data);
+		return func->returned_data->Clone();
+	}
+	return GetNodeByView(ids)->_data->Clone();
+}
+
 std::string SemanticTree::GetFullName(Node* node)
 {
 	std::string result = node->_data->id;
