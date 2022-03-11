@@ -11,7 +11,7 @@ int main()
 	
 	SetConsoleOutputCP(1251);
 	SetConsoleCP(1251);
-	for(int i = 1; i < 3; i++)
+	for(int i = 1; i < 5; i++)
 	{
 		std::string fname = "tests\\input" + std::to_string(i) + ".txt";
 		std::cout << "\n-------------------Code\n";
