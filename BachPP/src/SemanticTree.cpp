@@ -46,6 +46,13 @@ void SemanticTree::CheckWhileExp(Data* data) const
 	}
 }
 
+bool SemanticTree::IsWhileExecute(Data* data) const
+{
+	if (!isWork())
+		return false;
+	return data->value.short_int_value;
+}
+
 void SemanticTree::SetReturnedData(Data* returnedData) const
 {
 	if (!isWork())
@@ -70,18 +77,17 @@ Data* SemanticTree::GetNodeValue(std::vector<LexemaView> ids) const
 	return GetNodeByView(ids)->_data->Clone();
 }
 
-Node* SemanticTree::AddFunctionCall(Node * func)
+Node* SemanticTree::AddFunctionCall(Node* func)
 {
 	Node* func_exec = new Node(func->_data->Clone());
 	Node* neib = func->GetNeighbor();
 	func_exec->AddNeighbor(neib);
-	if(neib)
+	if (neib)
 	{
 		neib->SetParent(func_exec);
 	}
 	func->_neighbor = func_exec;
 	func_exec->SetParent(func);
-	//func_exec->SetParent(func);
 	_current = func_exec;
 	return func_exec;
 }
@@ -90,7 +96,7 @@ void SemanticTree::RemoveFunctionCall(Node* func_call)
 {
 	Node* func = func_call->GetParent();
 	Node* neib = func_call->GetNeighbor();
-	if(neib)
+	if (neib)
 	{
 		neib->SetParent(func);
 	}
@@ -116,7 +122,7 @@ void SemanticTree::SetTreePtr(Node* current)
 	if (isWork())
 		BaseTree::SetTreePtr(current);
 }
-Node * SemanticTree::GetTreePtr()
+Node* SemanticTree::GetTreePtr()
 {
 	return _current;
 }
@@ -127,7 +133,7 @@ std::string SemanticTree::GetFullName(Node* node)
 	auto parent = node->GetParent();
 	while (parent != nullptr)
 	{
-		if (parent->GetChild() == node && (parent->_data->type == SemanticType::ClassObj || parent->_data->type == SemanticType::Class))
+		if (parent->GetChild() == node && (parent->_data->type == SemanticType::ClassObj || parent->_data->type == SemanticType::Class ))
 			result = parent->_data->id + "." + result;
 		node = parent;
 		parent = node->GetParent();
@@ -152,8 +158,8 @@ Node* SemanticTree::AddVariableObject(Data* data)
 	}
 	return _current;
 }
-
-Node* SemanticTree::AddFunctionDeclare(SemanticType returnedType, const LexemaView& funcName)
+	//create node in tree, save ptr
+Node* SemanticTree::AddFunctionDeclare(SemanticType returnedType, const LexemaView& funcName, Node * func_body)
 {
 	if (!isWork())
 		return nullptr;
@@ -161,6 +167,7 @@ Node* SemanticTree::AddFunctionDeclare(SemanticType returnedType, const LexemaVi
 	auto func_node = AddVariableObject(new FunctionData(returnedType, funcName));
 	auto func_data = dynamic_cast<FunctionData*>(func_node->_data);
 	_sc->GetPtrs(func_data->ptr, func_data->line, func_data->col);
+	func_body = AddEmptyNodeAsChild();
 	return func_node;
 }
 
@@ -174,10 +181,11 @@ Node* SemanticTree::AddClass(const LexemaView& className)
 	SemanticType type = SemanticType::Class;
 	type.id = className;
 	auto class_node = AddVariableObject(new Data(type, className));
+	AddEmptyNodeAsChild();
 	return class_node;
 }
 
-Node* SemanticTree::AddCompoundBlock()
+Node* SemanticTree::AddEmptyNodeAsChild()
 {
 	if (!isWork())
 		return nullptr;
@@ -187,10 +195,21 @@ Node* SemanticTree::AddCompoundBlock()
 	return block;
 }
 
+Node* SemanticTree::AddCompoundBlock()
+{
+	if (!isWork())
+		return nullptr;
+	const auto comp_block = new Node(new Data(SemanticType::Empty, "emptyNode"));
+	_current->SetNeighbor(comp_block);
+	_current = comp_block;
+	
+	return comp_block;
+}
 
 
 void SemanticTree::SemanticExit(const std::vector<std::string>& errMsg) const
 {
+	Print(std::cout);
 	_sc->ErrorMsg(MSG_ID::SEM_ERR, errMsg);
 	exit(1);
 }

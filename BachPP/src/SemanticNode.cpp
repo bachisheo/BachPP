@@ -172,6 +172,15 @@ Node* Node::AddNeighbor(Node* neighbor)
 	current->_neighbor->_parent = current;
 	return  current->_neighbor;
 }
+Node* Node::SetNeighbor(Node* neighbor)
+{
+	if (neighbor == nullptr)
+		return  nullptr;
+	Node* current = this;
+	current->_neighbor = neighbor;
+	current->_neighbor->_parent = current;
+	return  current->_neighbor;
+}
 
 Node* Node::GetNeighbor() const
 {

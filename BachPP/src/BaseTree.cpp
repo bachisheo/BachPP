@@ -64,19 +64,33 @@ Node* BaseTree::FindUpOnLevel(const LexemaView& id) const
 
 Node* BaseTree::FindUpOnLevel(Node* from, const LexemaView& id)
 {
-	auto par = from;
+	while (true)
+	{
+		if (from->_data->id == id)
+		{
+			return from;
+		}
+		auto parent = from->GetParent();
+		if (parent == nullptr || parent->GetChild() == from)
+		{
+			return nullptr;
+		}
+		from = parent;
+	}
+	/*auto par = from;
 	while (true) {
 		if (par->_data->id == id)
 		{
 			break;
 		}
 		auto parpar = par->GetParent();
-		if (parpar == nullptr || parpar->GetNeighbor() != par)
+		if (parpar == nullptr || parpar->GetChild() == par)
 			return nullptr;
 		par = parpar;
 
 	}
 	return par;
+	*/
 }
 Node* BaseTree::FindUp(const LexemaView& id) const
 {

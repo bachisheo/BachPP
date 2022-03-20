@@ -41,6 +41,7 @@ private:
 	Data* ElementaryExpression();
 	void Operator();
 	void CompoundBlock();
+	void Block();
 	void WhileExecute();
 };
 

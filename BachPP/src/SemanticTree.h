@@ -28,13 +28,14 @@ public:
 	Data * UnaryOperation(Data * a, LexType sign);
 	Data * LogicalOperation(Data * a, Data * b, LexType sign);
 	bool IsEnableUnaryOperation(SemanticType type) const;
-
+	Node* AddEmptyNodeAsChild();
 	Node* AddVariableObject(Data * data);
-	Node* AddFunctionDeclare(SemanticType returnedType, const LexemaView& funcName);
+	Node* AddFunctionDeclare(SemanticType returnedType, const LexemaView& funcName, Node* func_body);
 	Node* AddClass(const LexemaView& className);
 	Node* AddCompoundBlock();
 	Node* AddClassObject(const LexemaView& objName, const LexemaView& className);
 	void CheckWhileExp(Data* data) const;
+	bool IsWhileExecute(Data* data) const;
 	void SetReturnedData(Data* data) const;
 	Data* GetNodeValue(std::vector<LexemaView> ids) const;
 	Node* AddFunctionCall(Node * func);

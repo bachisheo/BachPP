@@ -54,6 +54,7 @@ public:
 	Node* GetChild() const;
 	Node* AddNeighbor(Data* data);
 	Node* AddNeighbor(Node* node);
+	Node* SetNeighbor(Node* node);
 	Node* GetNeighbor() const;
 	Node* SetChild(Node* child);
 	void Print(std::ostream& out, int tab_count) const;

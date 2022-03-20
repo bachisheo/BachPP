@@ -69,28 +69,37 @@ void SyntacticalAnalyzer::Operator()
 // --{ declInFunc } --
 void SyntacticalAnalyzer::CompoundBlock()
 {
-	auto block_ptr = _tree->AddCompoundBlock();
+	auto comp_block = _tree->AddCompoundBlock();
+	Block();
+	_tree->SetTreePtr(comp_block);
+	_tree->RemoveObject(comp_block);
+}
+void SyntacticalAnalyzer::Block()
+{
+	auto comp_block = _tree->AddEmptyNodeAsChild();
 	ScanAndCheck(LexType::LFigBracket);
 	DeclareInFunction();
 	ScanAndCheck(LexType::RFigBracket);
-	_tree->SetTreePtr(block_ptr);
-	_tree->RemoveObject(block_ptr);
+	_tree->SetTreePtr(comp_block);
+	_tree->RemoveObject(comp_block);
 }
-
+int i = 0;
 void SyntacticalAnalyzer::WhileExecute()
 {
+	//PrintSemanticTree(std::cout);
 	int ptr, col, line;
 	_sc->GetPtrs(ptr, line, col);
 	bool savedInt = _tree->isInterpreting;
 	while_body:
-	_sc->SetPtrs(ptr, line, col);
-	ScanAndCheck(LexType::LRoundBracket);
-	//условие
-	auto data = Expression();
-	_tree->CheckWhileExp(data);
-	_tree->isInterpreting = data->value.short_int_value && _tree->isWork();
-	ScanAndCheck(LexType::RRoundBracket);
-	Operator();
+		//PrintSemanticTree(std::cout);
+		_sc->SetPtrs(ptr, line, col);
+		ScanAndCheck(LexType::LRoundBracket);
+		//условие
+		auto data = Expression();
+		_tree->CheckWhileExp(data);
+		_tree->isInterpreting = _tree->IsWhileExecute(data);
+		ScanAndCheck(LexType::RRoundBracket);
+		Operator();
 	if(_tree->isInterpreting) 
 		goto while_body;
 	_tree->isInterpreting = savedInt;
@@ -175,7 +184,6 @@ void SyntacticalAnalyzer::ClassDeclare()
 	ScanAndCheck(LexType::Id, className);
 	ScanAndCheck(LexType::LFigBracket);
 	const auto class_ptr = _tree->AddClass(className);
-	_tree->AddCompoundBlock();
 	Program(LexType::RFigBracket);
 	_tree->SetTreePtr(class_ptr);
 	ScanAndCheck(LexType::RFigBracket);
@@ -378,28 +386,31 @@ void SyntacticalAnalyzer::FunctionDeclare()
 {
 	bool isIntSaved = _tree->isInterpreting, isMain = true;
 	LexemaView func_name, type_view;
+	Node* func_body = nullptr;
 	auto returned_type = ScanType(type_view);
+
 	if (returned_type == SemanticType::Undefined) {
 		_tree->SemanticExit({ "Тип \'" , type_view, "\' не определен" });
 	}
+
 	returned_type.id = type_view;
 	if (!ScanAndCheck(LexType::main, func_name, false)) {
 		ScanAndCheck(LexType::Id, func_name);
 		isMain = false;
 	}
-	//create node in tree, save ptr
-	auto func_node = _tree->AddFunctionDeclare(returned_type, func_name);
 	ScanAndCheck(LexType::LRoundBracket);
 	ScanAndCheck(LexType::RRoundBracket);
-	if (func_node)
-	{
-		auto data = dynamic_cast<FunctionData*>(func_node->_data);
-		_sc->GetPtrs(data->ptr, data->line, data->col);
-	}
+	auto func_node = _tree->AddFunctionDeclare(returned_type, func_name, func_body);
 	_tree->isInterpreting = isMain;
-	CompoundBlock();
-	_tree->SetTreePtr(func_node);
+
+	Block();
+	if (!isMain) {
+		_tree->RemoveObject(func_body);
+	}
+
 	_tree->isInterpreting = isIntSaved;
+	_tree->SetTreePtr(func_node);
+
 }
 
 Data* SyntacticalAnalyzer::FunctionExecute(std::vector<LexemaView> ids)
@@ -418,7 +429,7 @@ Data* SyntacticalAnalyzer::FunctionExecute(std::vector<LexemaView> ids)
 	auto func_call = _tree->AddFunctionCall(func);
 	_sc->SetPtrs(fd->ptr, fd->line, fd->col);
 	//вычислить значение функции
-	CompoundBlock();
+	Block();
 	auto result = dynamic_cast<FunctionData*>(func_call->_data->Clone());
 	if (!result->is_return_operator_declarated && result->returned_type != SemanticType::Empty)
 	{
