@@ -1,6 +1,6 @@
 ﻿#pragma once
 #include "BaseTree.h"
-
+#include "Exception/CompilException.h"
 class SemanticTree : protected BaseTree
 {
 	Scanner* _sc;
@@ -14,7 +14,7 @@ public:
 	bool isReturned = false;
 	bool isWork() const;
 	SemanticTree(Scanner* sc);
-	void SemanticExit(const std::vector<std::string> & errMsg) const;
+	void SemanticExit(const std::vector<std::string>& errMsg,ErrorCode code) const;
 	Node* FindCurrentFunc() const;
 	static SemanticType GetType(LexType type_type, LexType next_type);
 	SemanticType GetType(LexType type_type, const LexemaView& type_view) const;
@@ -48,6 +48,7 @@ public:
 private:
 	bool IsComparableType(SemanticType realType, SemanticType neededType) const;
 	std::string GetFullName(Node* node);
+	std::string NameToString( std::vector<LexemaView> & ids) const;
 };
 
 

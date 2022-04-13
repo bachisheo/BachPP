@@ -7,10 +7,12 @@
 int a = 3;
 int main()
 {
-	
+	std::cout << (3 << 1);
+
 	SetConsoleOutputCP(1251);
 	SetConsoleCP(1251);
-	for(int i = 1; i < 5; i++)
+	//for(int i = 2; i < 3; i++)
+	int i = 4;
 	{
 		std::string fname = "tests\\input" + std::to_string(i) + ".txt";
 		std::cout << "\n-------------------Code\n";
@@ -25,14 +27,18 @@ int main()
 		}
 		fin.close();
 		std::cout << "\n-------------------Program output\n";
-
+	
 		Scanner* sc = new Scanner(fname.data());
 		SyntacticalAnalyzer sa = SyntacticalAnalyzer(sc);
-		sa.Program();
+		try {
+			sa.Program();
+		}catch(CompilException ce)
+		{
+			std::cout << std::endl << ce.what();
+			return 0;
+		}
 		std::cout << std::endl;
 		sa.PrintSemanticTree(std::cout);
 	}
-	
-
 }
 

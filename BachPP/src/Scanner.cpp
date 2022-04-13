@@ -1,5 +1,7 @@
 #include "Scanner.h"
-
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 #pragma warning(disable: 4996)
 LexType Scanner::ScanNumber(LexemaView& lex, int& len) {
 	for (; IsDigit(t[ptr]); ++ptr, ++len)
@@ -204,15 +206,23 @@ void Scanner::ScanAll()
 	} while (res != LexType::End);
 }
 
-Scanner::Scanner(const char* name) : line(1), col(1), ptr(0), size(0), lexBeginCol(0), lexBeginLine(0)
+Scanner::Scanner(const char* text, bool isFile) : line(1), col(1), ptr(0), size(0), lexBeginCol(0), lexBeginLine(0)
 {
-	fopen_s(&fin, name, "r");
-	t = new char[MAX_TEXT];
-	while (!feof(fin))
-		fscanf_s(fin, "%c", &t[size++]);
-	size--;
-	t[size] = '\0';
-	fclose(fin);
+	if(isFile)
+	{
+		fopen_s(&fin, text, "r");
+		t = new char[MAX_TEXT];
+		while (!feof(fin))
+			fscanf_s(fin, "%c", &t[size++]);
+		size--;
+		t[size] = '\0';
+		fclose(fin);
+	}
+	else{
+		int sze = strlen(text) + 1;
+		t = new char[sze];
+		strcpy_s(t, sze, text);
+	}
 }
 
 void Scanner::ErrorMsg(MSG_ID id, const std::vector<std::string>& params, bool isBegin) {
