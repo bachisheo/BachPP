@@ -38,6 +38,9 @@ private:
 	Data* AdditionalExpression();
 	Data* MultExpression();
 	Data* ElementaryExpression();
+	Data* BinaryOperation(Data * o1, Data * o2, LexType sign) const;
+	Data* UnaryOperation(Data* o1, LexType sign);
+
 	void Operator();
 	void CompoundBlock();
 	Node * Block();

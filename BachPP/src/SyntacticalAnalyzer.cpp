@@ -68,7 +68,7 @@ void SyntacticalAnalyzer::WhileExecute()
 	ScanAndCheck(LexType::LRoundBracket);
 	const auto data = Expression();
 	ScanAndCheck(LexType::RRoundBracket);
-	Utils::CheckWhileExp(data, *_tree);
+	Utils::CheckWhileExp(data, _tree);
 	Operator();
 }
 // --{ declInFunc } --
@@ -153,9 +153,9 @@ SemanticType SyntacticalAnalyzer::ScanType(LexemaView& lv) const
 	auto lex = _sc->Scan(lv);
 	if (lex == LexType::Short || lex == LexType::Long) {
 		auto nextLex = _sc->Scan();
-		return _tree->GetType(lex, nextLex);
+		return Utils::GetType(lex, nextLex);
 	}
-	return _tree->GetType(lex, lv);
+	return Utils::GetType(lex, lv, _tree);
 }
 
 //---- class id { Program } ;----
@@ -179,7 +179,7 @@ Data* SyntacticalAnalyzer::Expression()
 	auto nextLex = LookForward();
 	while (nextLex == LexType::LogEqual || nextLex == LexType::LogNotEqual) {
 		auto sign = _sc->Scan();
-		o1 = _tree->LogicalOperation(o1, LogicalExpression(), sign);
+		o1 = BinaryOperation(o1, LogicalExpression(), sign);
 		nextLex = LookForward();
 	}
 	return o1;
@@ -192,7 +192,7 @@ Data* SyntacticalAnalyzer::LogicalExpression()
 	while (nextLex == LexType::Less || nextLex == LexType::LessOrEqual ||
 		nextLex == LexType::More || nextLex == LexType::MoreOrEqual) {
 		auto sign = _sc->Scan();
-		o1 = _tree->LogicalOperation(o1, ShiftExpression(), sign);
+		o1 = BinaryOperation(o1, ShiftExpression(), sign);
 		nextLex = LookForward();
 	}
 	return o1;
@@ -205,7 +205,7 @@ Data* SyntacticalAnalyzer::ShiftExpression()
 	while (nextLex == LexType::ShiftLeft || nextLex == LexType::ShiftRight) {
 		auto sign = _sc->Scan();
 		auto o2 = AdditionalExpression();
-		o1 = _tree->BinaryOperation(o1, o2, sign);
+		o1 = BinaryOperation(o1, o2, sign);
 		nextLex = LookForward();
 	}
 	return o1;
@@ -223,12 +223,12 @@ Data* SyntacticalAnalyzer::AdditionalExpression()
 	auto o1 = MultExpression();
 	if (unaryOperation)
 	{
-		o1 = _tree->UnaryOperation(o1, sign);
+		o1 = UnaryOperation(o1, sign);
 	}
 	nextLex = LookForward();
 	while (nextLex == LexType::Plus || nextLex == LexType::Minus) {
 		sign = _sc->Scan();
-		o1 = _tree->BinaryOperation(o1, MultExpression(), sign);
+		o1 = BinaryOperation(o1, MultExpression(), sign);
 		nextLex = LookForward();
 	}
 	return o1;
@@ -241,7 +241,7 @@ Data* SyntacticalAnalyzer::MultExpression()
 	while (nextLex == LexType::DivSign || nextLex == LexType::ModSign || nextLex == LexType::MultSign) {
 		auto sign = _sc->Scan();
 		auto o2 = ElementaryExpression();
-		o1 = _tree->BinaryOperation(o1, o2, sign);
+		o1 = BinaryOperation(o1, o2, sign);
 		nextLex = LookForward();
 	}
 	return o1;
@@ -256,7 +256,7 @@ Data* SyntacticalAnalyzer::ElementaryExpression()
 	case LexType::ConstExp:
 	case LexType::ConstInt:
 		_sc->Scan(lexemaView);
-		result = _tree->GetConstData(lexemaView, lexType);
+		result = Utils::GetConstData(lexemaView, lexType, _tree);
 		break;
 
 	case LexType::Id: {
@@ -282,6 +282,16 @@ Data* SyntacticalAnalyzer::ElementaryExpression()
 		_tree->SemanticExit({ "Ожидается операнд, но встречен \"" , LexTypesName.find(lexType)->second, "\"" },ErrorCode::WrongSyntax);
 	}
 	return result;
+}
+
+Data* SyntacticalAnalyzer::BinaryOperation(Data* o1, Data* o2, LexType sign) const
+{
+	return new Data(Utils::GetResultType(o1->type, o2->type, sign), "tmp");
+}
+
+Data* SyntacticalAnalyzer::UnaryOperation(Data* o1, LexType sign)
+{
+	return new Data(o1->type, "tmp");
 }
 
 //     ---|     CLASS		|---
