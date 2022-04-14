@@ -19,7 +19,6 @@ void SyntacticalAnalyzer::Operator()
 		CompoundBlock();
 		break;
 	}
-
 	//while с предусловием
 	case LexType::While: {
 		_sc->Scan();
@@ -27,13 +26,9 @@ void SyntacticalAnalyzer::Operator()
 		break;
 	}
 	case LexType::Return: {
-		// todo поднимать флаг ретурна только если он вызван не в операторе 
 		_sc->Scan();
 		auto returnedData = Expression();
-		_tree->SetReturnedData(returnedData);
 		ScanAndCheck(LexType::DotComma);
-		if (_tree->isInterpreting)
-			_tree->isReturned = true;
 		break;
 	}
 	case LexType::Id:
@@ -58,7 +53,7 @@ void SyntacticalAnalyzer::Operator()
 		auto exprResult = Expression();
 		if (isAssigment)
 		{
-			_tree->SetData(destination, exprResult);
+			//_tree->SetData(destination, exprResult);
 		}
 		ScanAndCheck(LexType::DotComma);
 		break;
@@ -66,13 +61,21 @@ void SyntacticalAnalyzer::Operator()
 	default:_tree->SemanticExit({"оператор"}, ErrorCode::WrongSyntax);
 	}
 }
+int i = 0;
+void SyntacticalAnalyzer::WhileExecute()
+{
+	ScanAndCheck(LexType::LRoundBracket);
+	const auto data = Expression();
+	ScanAndCheck(LexType::RRoundBracket);
+	_tree->CheckWhileExp(data);
+	Operator();
+}
 // --{ declInFunc } --
 void SyntacticalAnalyzer::CompoundBlock()
 {
 	auto comp_block = _tree->AddCompoundBlock();
 	Block();
 	_tree->SetTreePtr(comp_block);
-	_tree->RemoveObject(comp_block);
 }
 Node * SyntacticalAnalyzer::Block()
 {
@@ -81,29 +84,9 @@ Node * SyntacticalAnalyzer::Block()
 	DeclareInFunction();
 	ScanAndCheck(LexType::RFigBracket);
 	_tree->SetTreePtr(comp_block);
-	_tree->RemoveObject(comp_block);
 	return comp_block;
 }
-int i = 0;
-void SyntacticalAnalyzer::WhileExecute()
-{
-	int ptr, col, line;
-	_sc->GetPtrs(ptr, line, col);
-	bool savedInt = _tree->isInterpreting;
-	while_body:
-		_sc->SetPtrs(ptr, line, col);
-		ScanAndCheck(LexType::LRoundBracket);
-		//условие
-		auto data = Expression();
-		ScanAndCheck(LexType::RRoundBracket);
 
-		_tree->CheckWhileExp(data);
-		_tree->isInterpreting = _tree->IsWhileExecute(data);
-		Operator();
-	if(_tree->isInterpreting) 
-		goto while_body;
-	_tree->isInterpreting = savedInt;
-}
 
 //просканировать на k символов вперед без 
 //изменения указателей сканера
@@ -148,7 +131,7 @@ bool SyntacticalAnalyzer::ScanAndCheck(LexType neededLex, bool needMsg)
 	return ScanAndCheck(neededLex, lv, needMsg);
 }
 
-//Получить полное при обращении вида a.b.c...
+//Получить полное имя при обращении вида a.b.c...
 //изменяет указатель
 std::vector<LexemaView> SyntacticalAnalyzer::GetFullName()
 {
@@ -263,7 +246,6 @@ Data* SyntacticalAnalyzer::MultExpression()
 	return o1;
 }
 
-
 Data* SyntacticalAnalyzer::ElementaryExpression()
 {
 	LexType lexType = LookForward();
@@ -283,7 +265,6 @@ Data* SyntacticalAnalyzer::ElementaryExpression()
 		if (lexType == LexType::LRoundBracket) {
 			_sc->Scan();
 			ScanAndCheck(LexType::RRoundBracket);
-			result = FunctionExecute(ids);
 		}
 		else
 		{
@@ -384,7 +365,6 @@ void SyntacticalAnalyzer::DeclareInFunction()
 //          |--main  --|
 void SyntacticalAnalyzer::FunctionDeclare()
 {
-	bool isIntSaved = _tree->isInterpreting, isMain = true;
 	LexemaView func_name, type_view;
 	Node* func_body = nullptr;
 	auto returned_type = ScanType(type_view);
@@ -396,51 +376,15 @@ void SyntacticalAnalyzer::FunctionDeclare()
 	returned_type.id = type_view;
 	if (!ScanAndCheck(LexType::main, func_name, false)) {
 		ScanAndCheck(LexType::Id, func_name);
-		isMain = false;
 	}
 	ScanAndCheck(LexType::LRoundBracket);
 	ScanAndCheck(LexType::RRoundBracket);
 	auto func_node = _tree->AddFunctionDeclare(returned_type, func_name, func_body);
-	_tree->isInterpreting = isMain;
-	func_body = Block();
-	if (!isMain) {
-		_tree->RemoveObject(func_body);
-	}
-
-	_tree->isInterpreting = isIntSaved;
-	_tree->SetTreePtr(func_node);
-
-}
-
-Data* SyntacticalAnalyzer::FunctionExecute(std::vector<LexemaView> ids)
-{
-	if (!_tree->isWork())
-		return nullptr;
-	_tree->isReturned = false;
-	//получить узел с описанием функции
-	auto func = _tree->GetNodeByView(ids, true);
-	auto fd = dynamic_cast<FunctionData*>(func->_data);
-	//сохранить текущий контекст
-	int ptr, line, col;
-	auto cur = _tree->GetTreePtr();
-	_sc->GetPtrs(ptr, line, col);
-	//восстановить контекст функции
-	auto func_call = _tree->AddFunctionCall(func);
-	_sc->SetPtrs(fd->ptr, fd->line, fd->col);
-	//вычислить значение функции
 	Block();
-	auto result = dynamic_cast<FunctionData*>(func_call->_data->Clone());
-	if (!result->is_return_operator_declarated && result->returned_type != SemanticType::Empty)
-	{
-		_tree->SemanticExit({ "Функция должна возвращать значение" },ErrorCode::Undefined);
-	}
-	//восстановить состояние программы до вызова
-	_tree->isReturned = false;
-	_tree->RemoveFunctionCall(func_call);
-	_tree->SetTreePtr(cur);
-	_sc->SetPtrs(ptr, line, col);
-	return result->returned_data;
+	_tree->SetTreePtr(func_node);
 }
+
+
 
 //type var |;
 //         |, var...;
@@ -467,7 +411,7 @@ void SyntacticalAnalyzer::DataDeclare()
 	//initiate, if needed
 	if (LookForward() == LexType::Equal) {
 		_sc->Scan();
-		_tree->SetData(variable, Expression());
+		Expression();
 	}
 
 	while (LookForward() == LexType::Comma) {
@@ -483,7 +427,7 @@ void SyntacticalAnalyzer::DataDeclare()
 		//initiate, if needed
 		if (LookForward() == LexType::Equal) {
 			_sc->Scan();
-			_tree->SetData(variable, Expression());
+			Expression();
 		}
 	}
 	ScanAndCheck(LexType::DotComma);

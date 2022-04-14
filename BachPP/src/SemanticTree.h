@@ -5,17 +5,10 @@ class SemanticTree : protected BaseTree
 {
 	Scanner* _sc;
 	bool IsDataType(SemanticType type) const;
-	Data * CalculateFloatValue(Data* a, Data* b, LexType sign) const;
-	Data * CalculateShortIntValue(Data* a, Data* b, LexType sign) const;
-	Data * CalculateFloatLogic(Data* a, Data* b, LexType sign) const;
-	Data * CalculateShortIntLogic(Data* a, Data* b, LexType sign) const;
+
 public:
-	bool isInterpreting = true;
-	bool isReturned = false;
-	bool isWork() const;
 	SemanticTree(Scanner* sc);
 	void SemanticExit(const std::vector<std::string>& errMsg,ErrorCode code) const;
-	Node* FindCurrentFunc() const;
 	static SemanticType GetType(LexType type_type, LexType next_type);
 	SemanticType GetType(LexType type_type, const LexemaView& type_view) const;
 	void CheckUnique(const LexemaView& lv) const;
@@ -36,7 +29,6 @@ public:
 	Node* AddClassObject(const LexemaView& objName, const LexemaView& className);
 	void CheckWhileExp(Data* data) const;
 	bool IsWhileExecute(Data* data) const;
-	void SetReturnedData(Data* data) const;
 	Data* GetNodeValue(std::vector<LexemaView> ids) const;
 	Node* AddFunctionCall(Node * func);
 	void RemoveFunctionCall(Node * func_call);
