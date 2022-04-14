@@ -374,55 +374,20 @@ SemanticType SemanticTree::GetResultType(SemanticType a, SemanticType b, LexType
 Data* SemanticTree::BinaryOperation(Data* a, Data* b, LexType sign)
 {
 	const auto type = GetResultType(a->type, b->type, sign);
-	switch (type)
-	{
-	case SemanticType::Float:
-		return nullptr;
-	case SemanticType::ShortInt:
-		return  nullptr;
-	default:
-		return nullptr;
-	}
+	return new Data(type, "tmp");
 }
 
 Data* SemanticTree::UnaryOperation(Data* a, LexType sign)
 {
 	IsEnableUnaryOperation(a->type);
 	Data* d = new Data(*a);
-	switch (d->type)
-	{
-	case SemanticType::Float:
-		if (sign == LexType::Plus)
-		{
-			d->value.float_value = abs(d->value.float_value);
-		}
-		else d->value.float_value *= -1.f;
-		break;
-	case SemanticType::ShortInt:
-		if (sign == LexType::Plus)
-		{
-			d->value.short_int_value = abs(d->value.short_int_value);
-		}
-		else d->value.short_int_value *= -1;
-		break;
-		default:	
-			SemanticExit({ d->type.id}, ErrorCode::WaitForOtherType);
-	}
 	return d;
 }
 
 Data* SemanticTree::LogicalOperation(Data* a, Data* b, LexType sign)
 {
 	const auto type = GetResultType(a->type, b->type, sign);
-	switch (type)
-	{
-	case SemanticType::Float:
-		return nullptr;
-	case SemanticType::ShortInt:		
-		return nullptr;
-	default:
-		return nullptr;
-	}
+	return new Data(type, "");
 }
 
 bool SemanticTree::IsEnableUnaryOperation(SemanticType type) const
