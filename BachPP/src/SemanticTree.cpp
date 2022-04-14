@@ -1,10 +1,6 @@
 #include "SemanticTree.h"
 
 #include <string>
-bool SemanticTree::IsDataType(SemanticType type) const
-{
-	return (type == SemanticType::LongInt || type == SemanticType::ShortInt || type == SemanticType::Float);
-}
 
 SemanticTree::SemanticTree(Scanner* sc) :_sc(sc)
 {
@@ -26,20 +22,6 @@ Node* SemanticTree::AddClassObject(const LexemaView& objName, const LexemaView& 
 	return obj;
 }
 
-void SemanticTree::CheckWhileExp(Data* data) const
-{
-	if (!IsComparableType(data->type, SemanticType::ShortInt))
-	{
-		SemanticExit({ "ShortInt" },ErrorCode::WaitForOtherType);
-	}
-}
-
-bool SemanticTree::IsWhileExecute(Data* data) const
-{
-	return data->value.short_int_value;
-}
-
-
 
 //Получить значение переменной
 //или результата выоплнения функции
@@ -48,33 +30,7 @@ Data* SemanticTree::GetNodeValue(std::vector<LexemaView> ids) const
 	return GetNodeByView(ids)->_data->Clone();
 }
 
-Node* SemanticTree::AddFunctionCall(Node* func)
-{
-	Node* func_exec = new Node(func->_data->Clone());
-	Node* neib = func->GetNeighbor();
-	func_exec->AddNeighbor(neib);
-	if (neib)
-	{
-		neib->SetParent(func_exec);
-	}
-	func->_neighbor = func_exec;
-	func_exec->SetParent(func);
-	_current = func_exec;
-	return func_exec;
-}
 
-void SemanticTree::RemoveFunctionCall(Node* func_call)
-{
-	Node* func = func_call->GetParent();
-	Node* neib = func_call->GetNeighbor();
-	if (neib)
-	{
-		neib->SetParent(func);
-	}
-	func->_neighbor = neib;
-	func_call->_neighbor = nullptr;
-	delete func_call;
-}
 
 void SemanticTree::RemoveObject(Node* node)
 {
@@ -269,98 +225,13 @@ Node* SemanticTree::GetNodeByView(std::vector<LexemaView>& ids, bool isFunc) con
 	return node;
 }
 
-int numberStrCmp(std::string a, std::string b)
-{
-	size_t dif = a.size() - b.size();
-	if (dif) return dif;
-	return strcmp(a.c_str(), b.c_str());
-}
-Data* SemanticTree::GetConstData(const LexemaView& lv, LexType lt) const
-{
-	Data* result = new Data();
-	switch (lt)
-	{
-	case LexType::ConstExp: {
-		result->type = SemanticType::Float;
-		result->value.float_value = atof(lv.c_str());
-		break;
-	}
-	case LexType::ConstInt:
-		if (numberStrCmp(lv, MaxShort) <= 0) {
-			result->type = SemanticType::ShortInt;
-			result->value.short_int_value = atoi(lv.data());
-		}
-		else
-			if (numberStrCmp(lv, MaxLong) <= 0) {
-				result->type = SemanticType::LongInt;
-				result->value.short_int_value = atoi(lv.data());
-			}
-			else
-				SemanticExit({ std::to_string(MAX_LEX) },ErrorCode::TooLargeConstSize);
-		break;
-	default:
-		SemanticExit({ lv },ErrorCode::UndefinedConstType);
 
-	}
-	return result;
-}
 
 void SemanticTree::SetData(Node* dst, Data* src)
 {
 }
 
-/// <summary>
-///Поиск типа результата выполнения операции
-/// </summary>
-/// <param name="a">Тип первого операнда</param>
-/// <param name="b">Тип второго операнда</param>
-/// <param name="sign">Тип операции</param>
-/// <returns>Тип результата выполнения операции</returns>
-SemanticType SemanticTree::GetResultType(SemanticType a, SemanticType b, LexType sign)
-{
-	if (a == SemanticType::Undefined || b == SemanticType::Undefined)
-	{
-		return SemanticType::Undefined;
-	}
-	if (!(IsDataType(a) && IsDataType(b)))
-	{
-		return SemanticType::Undefined;
-	}
-	if (a == b)
-	{
-		return a;
-	}
-	if (a == SemanticType::Float || b == SemanticType::Float)
-	{
-		return SemanticType::Float;
-	}
-	if (a == SemanticType::LongInt || b == SemanticType::LongInt)
-	{
-		return SemanticType::LongInt;
-	}
-	return SemanticType::ShortInt;
-}
 
-
-
-Data* SemanticTree::BinaryOperation(Data* a, Data* b, LexType sign)
-{
-	const auto type = GetResultType(a->type, b->type, sign);
-	return new Data(type, "tmp");
-}
-
-Data* SemanticTree::UnaryOperation(Data* a, LexType sign)
-{
-	IsEnableUnaryOperation(a->type);
-	Data* d = new Data(*a);
-	return d;
-}
-
-Data* SemanticTree::LogicalOperation(Data* a, Data* b, LexType sign)
-{
-	const auto type = GetResultType(a->type, b->type, sign);
-	return new Data(type, "");
-}
 
 bool SemanticTree::IsEnableUnaryOperation(SemanticType type) const
 {
@@ -370,16 +241,4 @@ bool SemanticTree::IsEnableUnaryOperation(SemanticType type) const
 	SemanticExit({ "С опреандом типа \"",type.id, "\" не совместимы унарные операции " },ErrorCode::WrongOperation);
 	return false;
 }
-/// <summary>
-/// Проверить, можно ли привести тип выражения к типу используемой синтаксической конструкции
-/// </summary>
-bool SemanticTree::IsComparableType(SemanticType realType, SemanticType neededType) const
-{
-	if (realType == SemanticType::Void || neededType == SemanticType::Void)
-		return false;
-	if (realType == SemanticType::ClassObj)
-	{
-		return (neededType == SemanticType::ClassObj && realType.id == neededType.id);
-	}
-	return IsDataType(realType) && IsDataType(neededType);
-}
+
