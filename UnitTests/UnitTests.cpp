@@ -79,7 +79,57 @@ namespace UnitTests
 			TestSA(code, ErrorCode::WaitForOtherType);
 
 		}
-
-
+		TEST_METHOD(WrongReturnedType)
+		{
+			std::string code = "asdas func(){ return 12;}; ";
+			TestSA(code, ErrorCode::Undefined);
+		}
+		TEST_METHOD(WrongVariableType)
+		{
+			std::string code = "asdas a = 12; ";
+			TestSA(code, ErrorCode::Undefined);
+			code = "intb a = 12; ";
+			TestSA(code, ErrorCode::Undefined);
+		}
+		///
+	
+	};
+	TEST_CLASS(SimpleExamples)
+	{
+		void testScan(std::string code)
+		{
+			setlocale(LC_ALL, "rus");
+			Scanner sc = Scanner(code.c_str(), false);
+			SyntacticalAnalyzer sa = SyntacticalAnalyzer(&sc);
+			sa.Program();
+		}
+	public:
+		TEST_METHOD(ScannerTest)
+		{
+			Scanner sc = Scanner("int a = 3;", false);
+			sc.ScanAll();
+		}
+		TEST_METHOD(SimpleMain)
+		{
+			std::vector<std::string> codes = { "int a;",
+			"int main(){return 12;}",
+			"float foo(){ int a = 3; return a;}"
+			};
+			for (auto code : codes)
+			{
+				testScan(code);
+			}
+		}
+		TEST_METHOD(FuncUse)
+		{
+			std::vector<std::string> codes = { 
+			"float foo(){ int a = 3; return a;} int main(){return foo();}",
+			"int main() { return foo(); }"
+			};
+			for (auto code : codes)
+			{
+				testScan(code);
+			}
+		}
 	};
 }
