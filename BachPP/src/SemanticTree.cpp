@@ -6,12 +6,6 @@ bool SemanticTree::IsDataType(SemanticType type) const
 	return (type == SemanticType::LongInt || type == SemanticType::ShortInt || type == SemanticType::Float);
 }
 
-
-bool SemanticTree::isWork() const
-{
-	return isInterpreting && !isReturned;
-}
-
 SemanticTree::SemanticTree(Scanner* sc) :_sc(sc)
 {
 	_current = nullptr;
@@ -19,8 +13,6 @@ SemanticTree::SemanticTree(Scanner* sc) :_sc(sc)
 
 Node* SemanticTree::AddClassObject(const LexemaView& objName, const LexemaView& className)
 {
-	if (!isWork())
-		return nullptr;
 	const auto classDeclaration = FindUp(className);
 	if (classDeclaration == nullptr)
 	{
@@ -36,8 +28,6 @@ Node* SemanticTree::AddClassObject(const LexemaView& objName, const LexemaView& 
 
 void SemanticTree::CheckWhileExp(Data* data) const
 {
-	if (!isWork())
-		return;
 	if (!IsComparableType(data->type, SemanticType::ShortInt))
 	{
 		SemanticExit({ "ShortInt" },ErrorCode::WaitForOtherType);
@@ -46,32 +36,15 @@ void SemanticTree::CheckWhileExp(Data* data) const
 
 bool SemanticTree::IsWhileExecute(Data* data) const
 {
-	if (!isWork())
-		return false;
 	return data->value.short_int_value;
 }
 
-void SemanticTree::SetReturnedData(Data* returnedData) const
-{
-	if (!isWork())
-		return;
-	auto func = FindCurrentFunc();
-	auto func_data = dynamic_cast<FunctionData*>(func->_data);
-	func_data->is_return_operator_declarated = true;
-	if (!IsComparableType(returnedData->type, func_data->returned_type))
-	{
-		SemanticExit({ "Тип возвращаемого значения не соответсвует объявленному" },ErrorCode::Undefined);
-	}
-	func_data->returned_data = returnedData;
-}
+
 
 //Получить значение переменной
 //или результата выоплнения функции
 Data* SemanticTree::GetNodeValue(std::vector<LexemaView> ids) const
 {
-	if (!isWork())
-		return nullptr;
-
 	return GetNodeByView(ids)->_data->Clone();
 }
 
@@ -105,8 +78,7 @@ void SemanticTree::RemoveFunctionCall(Node* func_call)
 
 void SemanticTree::RemoveObject(Node* node)
 {
-	if (isWork())
-		BaseTree::RemoveObject(node);
+	BaseTree::RemoveObject(node);
 }
 
 void SemanticTree::Print(std::ostream& out) const
@@ -117,7 +89,6 @@ void SemanticTree::Print(std::ostream& out) const
 
 void SemanticTree::SetTreePtr(Node* current)
 {
-	if (isWork())
 		BaseTree::SetTreePtr(current);
 }
 Node* SemanticTree::GetTreePtr()
@@ -154,8 +125,6 @@ std::string SemanticTree::NameToString(std::vector<LexemaView> & ids) const
 
 Node* SemanticTree::AddVariableObject(Data* data)
 {
-	if (!isWork())
-		return nullptr;
 	CheckUnique(data->id);
 	if (_root == nullptr)
 	{
@@ -171,13 +140,10 @@ Node* SemanticTree::AddVariableObject(Data* data)
 	//create node in tree, save ptr
 Node* SemanticTree::AddFunctionDeclare(SemanticType returnedType, const LexemaView& funcName, Node * func_body)
 {
-	if (!isWork())
-		return nullptr;
 	CheckUnique(funcName);
 	auto func_node = AddVariableObject(new FunctionData(returnedType, funcName));
 	auto func_data = dynamic_cast<FunctionData*>(func_node->_data);
 	_sc->GetPtrs(func_data->ptr, func_data->line, func_data->col);
-	//func_body = AddEmptyNodeAsChild();
 	return func_node;
 }
 
@@ -185,8 +151,6 @@ Node* SemanticTree::AddFunctionDeclare(SemanticType returnedType, const LexemaVi
 
 Node* SemanticTree::AddClass(const LexemaView& className)
 {
-	if (!isWork())
-		return nullptr;
 	CheckUnique(className);
 	SemanticType type = SemanticType::Class;
 	type.id = className;
@@ -197,8 +161,6 @@ Node* SemanticTree::AddClass(const LexemaView& className)
 
 Node* SemanticTree::AddEmptyNodeAsChild()
 {
-	if (!isWork())
-		return nullptr;
 	const auto block = new Node(new Data(SemanticType::Empty, "emptyNode"));
 	_current->SetChild(block);
 	_current = block;
@@ -207,12 +169,9 @@ Node* SemanticTree::AddEmptyNodeAsChild()
 
 Node* SemanticTree::AddCompoundBlock()
 {
-	if (!isWork())
-		return nullptr;
 	const auto comp_block = new Node(new Data(SemanticType::Empty, "emptyNode"));
 	_current->SetNeighbor(comp_block);
 	_current = comp_block;
-	
 	return comp_block;
 }
 
@@ -223,19 +182,6 @@ void SemanticTree::SemanticExit(const std::vector<std::string>& errMsg, ErrorCod
 	_sc->GetPtrs(_ptr, _len, _col);
 	throw CompilException(code, errMsg, _len, _col);
 
-}
-
-
-Node* SemanticTree::FindCurrentFunc() const
-{
-	if (!isWork())
-		return nullptr;
-	auto func_node = _current;
-
-	while (func_node->_data->type != SemanticType::Function) {
-		func_node = func_node->GetParent();
-	}
-	return func_node;
 }
 
 
@@ -269,7 +215,7 @@ SemanticType SemanticTree::GetType(LexType type_type, const LexemaView& type_vie
 	case LexType::Id:
 	{
 		auto nod = FindUp(type_view);
-		if (nod != nullptr && isInterpreting)
+		if (nod != nullptr)
 		{
 			if (nod->_data->type == SemanticType::Class) {
 				SemanticType type = SemanticType::ClassObj;
@@ -288,8 +234,6 @@ SemanticType SemanticTree::GetType(LexType type_type, const LexemaView& type_vie
 ///
 void SemanticTree::CheckUnique(const LexemaView& lv) const
 {
-	if (!isWork())
-		return;
 	auto n = FindUpOnLevel(lv);
 	if (n != nullptr)
 		SemanticExit({ lv },ErrorCode::NotUniqueId);
@@ -298,8 +242,6 @@ void SemanticTree::CheckUnique(const LexemaView& lv) const
 
 Node* SemanticTree::GetNodeByView(std::vector<LexemaView>& ids, bool isFunc) const
 {
-	if (!isWork())
-		return nullptr;
 	auto node = FindUp(ids[0]);
 	//?
 	if (node == nullptr)
@@ -335,8 +277,6 @@ int numberStrCmp(std::string a, std::string b)
 }
 Data* SemanticTree::GetConstData(const LexemaView& lv, LexType lt) const
 {
-	if (!isWork())
-		return nullptr;
 	Data* result = new Data();
 	switch (lt)
 	{
@@ -366,9 +306,7 @@ Data* SemanticTree::GetConstData(const LexemaView& lv, LexType lt) const
 }
 
 void SemanticTree::SetData(Node* dst, Data* src)
-{
-	if (!isWork())
-		return;
+{/*
 	if (!IsComparableType(dst->_data->type, src->type))
 	{
 		SemanticExit({ " Тип присваемого значения (", src->type.id,  ") не соответсвует типу переменной ", dst->_data->id, "(", dst->_data->type.id, ")" },ErrorCode::Undefined);
@@ -396,7 +334,7 @@ void SemanticTree::SetData(Node* dst, Data* src)
 		}
 		}
 	}
-	std::cout << "\nПеременной " + GetFullName(dst) + " присвоено значение:\t " << *src;
+	std::cout << "\nПеременной " + GetFullName(dst) + " присвоено значение:\t " << *src;*/
 }
 
 /// <summary>
@@ -408,8 +346,6 @@ void SemanticTree::SetData(Node* dst, Data* src)
 /// <returns>Тип результата выполнения операции</returns>
 SemanticType SemanticTree::GetResultType(SemanticType a, SemanticType b, LexType sign)
 {
-	if (!isWork())
-		return SemanticType::Empty;
 	if (a == SemanticType::Undefined || b == SemanticType::Undefined)
 	{
 		return SemanticType::Undefined;
@@ -433,161 +369,17 @@ SemanticType SemanticTree::GetResultType(SemanticType a, SemanticType b, LexType
 	return SemanticType::ShortInt;
 }
 
-//float - тип результата операции, один из операндов может быть младше его
-Data* SemanticTree::CalculateFloatValue(Data* _a, Data* _b, LexType sign) const
-{
-	Data* a = _a, * b = _b;
-	Data* c = new Data();
-	c->type = SemanticType::Float;
-	float res = a->type == SemanticType::Float ? a->value.float_value : a->value.short_int_value;
-	switch (sign)
-	{
-	case LexType::Plus:
-		res += b->type == SemanticType::Float ? b->value.float_value : b->value.short_int_value;
-		break;
-	case LexType::Minus:
-		res -= b->type == SemanticType::Float ? b->value.float_value : b->value.short_int_value;
-		break;
-	case LexType::DivSign:
-		res /= b->type == SemanticType::Float ? b->value.float_value : b->value.short_int_value;
-		break;
-	case LexType::MultSign:
-		res *= b->type == SemanticType::Float ? b->value.float_value : b->value.short_int_value;
-		break;
-	default:
-		SemanticExit({ "целочисленный" },ErrorCode::WaitForOtherType);
-	}
-	c->value.float_value = res;
-	return c;
-}
-Data* SemanticTree::CalculateShortIntValue(Data* a, Data* b, LexType sign) const
-{
-	if (a->type == SemanticType::Float || b->type == SemanticType::Float)
-		SemanticExit({  TypesName.find(SemanticType::Float)->second, TypesName.find(SemanticType::ShortInt)->second },ErrorCode::WrongTypeConversion);
 
-	Data* c = new Data();
-	c->type = SemanticType::ShortInt;
-	int res = a->value.short_int_value;
-	bool is_wrong_b = false;
-	switch (sign)
-	{
-	case LexType::Plus:
-		res += b->value.short_int_value;
-		break;
-	case LexType::Minus:
-		res -= b->value.short_int_value;
-		break;
-	case LexType::DivSign:
-		if (b->value.short_int_value == 0)
-			SemanticExit({ },ErrorCode::DivisionByZero);
-		res /= b->value.short_int_value;
-		break;
-	case LexType::MultSign:
-		res *= b->value.short_int_value;
-		break;
-	case LexType::ModSign:
-		if (b->value.short_int_value == 0)
-			SemanticExit({ },ErrorCode::DivisionByZero);
-		res %= b->value.short_int_value;
-		break;
-	case LexType::ShiftLeft:
-		res <<= b->value.short_int_value;
-		break;
-	case LexType::ShiftRight:
-		res >>= b->value.short_int_value;
-		break;
-	default:
-		SemanticExit({ "С опреандом типа", TypesName.find(SemanticType::ShortInt)->second,
-			" несовместимая бинарная операция ", LexTypesName.find(sign)->second },ErrorCode::WrongOperation);
-		break;
-	}
-	c->value.short_int_value = res;
-	return c;
-}
-
-Data* SemanticTree::CalculateFloatLogic(Data* a, Data* b, LexType sign) const
-{
-	bool res;
-	float f_val = a->type == SemanticType::Float ? a->value.float_value : a->value.short_int_value;
-	switch (sign)
-	{
-	case LexType::LogEqual:
-		res = f_val == (b->type == SemanticType::Float ? b->value.float_value : b->value.short_int_value);
-		break;
-	case LexType::LogNotEqual:
-		res = f_val != (b->type == SemanticType::Float ? b->value.float_value : b->value.short_int_value);
-		break;
-	case LexType::Less:
-		res = f_val < (b->type == SemanticType::Float ? b->value.float_value : b->value.short_int_value);
-		break;
-	case LexType::More:
-		res = f_val > (b->type == SemanticType::Float ? b->value.float_value : b->value.short_int_value);
-		break;
-	case LexType::LessOrEqual:
-		res = f_val <= (b->type == SemanticType::Float ? b->value.float_value : b->value.short_int_value);
-		break;
-	case LexType::MoreOrEqual:
-		res = f_val >= (b->type == SemanticType::Float ? b->value.float_value : b->value.short_int_value);
-		break;
-	default:
-		SemanticExit({ "С опреандом типа", TypesName.find(SemanticType::Float)->second,
-			" несовместима логическая операция ", LexTypesName.find(sign)->second },ErrorCode::WrongOperation);
-	}
-	Data* c = new Data();
-	c->type = SemanticType::ShortInt;
-	c->value.short_int_value = res;
-	return c;
-}
-
-Data* SemanticTree::CalculateShortIntLogic(Data* a, Data* b, LexType sign) const
-{
-
-	if (a->type == SemanticType::Float || b->type == SemanticType::Float)
-		SemanticExit({ TypesName.find(SemanticType::Float)->second, TypesName.find(SemanticType::ShortInt)->second }, ErrorCode::WrongTypeConversion);
-
-	bool res;
-	short int short_val = a->value.short_int_value;
-	switch (sign)
-	{
-	case LexType::LogEqual:
-		res = short_val == b->value.short_int_value;
-		break;
-	case LexType::LogNotEqual:
-		res = short_val != b->value.short_int_value;
-		break;
-	case LexType::Less:
-		res = short_val < b->value.short_int_value;
-		break;
-	case LexType::More:
-		res = short_val > b->value.short_int_value;
-		break;
-	case LexType::LessOrEqual:
-		res = short_val <= b->value.short_int_value;
-		break;
-	case LexType::MoreOrEqual:
-		res = short_val >= b->value.short_int_value;
-		break;
-	default:
-		SemanticExit({ "С опреандом типа", TypesName.find(SemanticType::ShortInt)->second,
-			" несовместима логическая операция ", LexTypesName.find(sign)->second },ErrorCode::WrongOperation);
-	}
-	Data* c = new Data();
-	c->type = SemanticType::ShortInt;
-	c->value.short_int_value = res;
-	return c;
-}
 
 Data* SemanticTree::BinaryOperation(Data* a, Data* b, LexType sign)
 {
-	if (!isWork())
-		return nullptr;
 	const auto type = GetResultType(a->type, b->type, sign);
 	switch (type)
 	{
 	case SemanticType::Float:
-		return CalculateFloatValue(a, b, sign);
+		return nullptr;
 	case SemanticType::ShortInt:
-		return CalculateShortIntValue(a, b, sign);
+		return  nullptr;
 	default:
 		return nullptr;
 	}
@@ -595,8 +387,6 @@ Data* SemanticTree::BinaryOperation(Data* a, Data* b, LexType sign)
 
 Data* SemanticTree::UnaryOperation(Data* a, LexType sign)
 {
-	if (!isWork())
-		return nullptr;
 	IsEnableUnaryOperation(a->type);
 	Data* d = new Data(*a);
 	switch (d->type)
@@ -615,21 +405,21 @@ Data* SemanticTree::UnaryOperation(Data* a, LexType sign)
 		}
 		else d->value.short_int_value *= -1;
 		break;
+		default:	
+			SemanticExit({ d->type.id}, ErrorCode::WaitForOtherType);
 	}
 	return d;
 }
 
 Data* SemanticTree::LogicalOperation(Data* a, Data* b, LexType sign)
 {
-	if (!isWork())
-		return nullptr;
 	const auto type = GetResultType(a->type, b->type, sign);
 	switch (type)
 	{
 	case SemanticType::Float:
-		return CalculateFloatLogic(a, b, sign);
-	case SemanticType::ShortInt:
-		return CalculateShortIntLogic(a, b, sign);
+		return nullptr;
+	case SemanticType::ShortInt:		
+		return nullptr;
 	default:
 		return nullptr;
 	}
@@ -640,7 +430,7 @@ bool SemanticTree::IsEnableUnaryOperation(SemanticType type) const
 	if (type == SemanticType::LongInt || type == SemanticType::Float ||
 		type == SemanticType::ShortInt)
 		return true;
-	SemanticExit({ "С опреандом типа \"",TypesName.find(type)->second, "\" не совместимы унарные операции " },ErrorCode::WrongOperation);
+	SemanticExit({ "С опреандом типа \"",type.id, "\" не совместимы унарные операции " },ErrorCode::WrongOperation);
 	return false;
 }
 /// <summary>
