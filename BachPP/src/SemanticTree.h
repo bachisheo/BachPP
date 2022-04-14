@@ -8,8 +8,6 @@ class SemanticTree : protected BaseTree
 public:
 	SemanticTree(Scanner* sc);
 	void SemanticExit(const std::vector<std::string>& errMsg,ErrorCode code) const;
-	static SemanticType GetType(LexType type_type, LexType next_type);
-	SemanticType GetType(LexType type_type, const LexemaView& type_view) const;
 	void CheckUnique(const LexemaView& lv) const;
 
 	Node* GetNodeByView(std::vector<LexemaView> & ids, bool isFunc = false) const;
@@ -28,11 +26,12 @@ public:
 	void RemoveObject(Node* node);
 	void Print(std::ostream& out) const;
 	void SetTreePtr(Node* current);
-	Node * GetTreePtr();
+	Node * GetTreePtr() const;
+	Node* FindUp(const LexemaView& type_view) const;
 private:
 	
 	std::string GetFullName(Node* node);
-	std::string NameToString( std::vector<LexemaView> & ids) const;
+
 };
 
 

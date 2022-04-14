@@ -2,7 +2,7 @@
 /// <summary>
 /// Проверить, можно ли привести тип выражения к типу используемой синтаксической конструкции
 /// </summary>
-bool Utils::IsComparableType(SemanticType realType, SemanticType neededType) const
+bool Utils::IsComparableType(SemanticType realType, SemanticType neededType)
 {
 	if (realType == SemanticType::Void || neededType == SemanticType::Void)
 		return false;
@@ -13,7 +13,7 @@ bool Utils::IsComparableType(SemanticType realType, SemanticType neededType) con
 	return IsDataType(realType) && IsDataType(neededType);
 }
 
-bool Utils::IsDataType(SemanticType type) const
+bool Utils::IsDataType(SemanticType type)
 {
 	return (type == SemanticType::LongInt || type == SemanticType::ShortInt || type == SemanticType::Float);
 }
@@ -25,7 +25,7 @@ int numberStrCmp(std::string a, std::string b)
 	return strcmp(a.c_str(), b.c_str());
 }
 
-Data* Utils::GetConstData(const LexemaView& lv, LexType lt, SemanticTree st) const
+Data* Utils::GetConstData(const LexemaView& lv, LexType lt, SemanticTree* st)
 {
 	Data* result = new Data();
 	switch (lt)
@@ -46,10 +46,10 @@ Data* Utils::GetConstData(const LexemaView& lv, LexType lt, SemanticTree st) con
 				result->value.short_int_value = atoi(lv.data());
 			}
 			else
-				st.SemanticExit({ std::to_string(MAX_LEX) }, ErrorCode::TooLargeConstSize);
+				st->SemanticExit({ std::to_string(MAX_LEX) }, ErrorCode::TooLargeConstSize);
 		break;
 	default:
-		st.SemanticExit({ lv }, ErrorCode::UndefinedConstType);
+		st->SemanticExit({ lv }, ErrorCode::UndefinedConstType);
 
 	}
 	return result;
@@ -63,7 +63,7 @@ Data* Utils::GetConstData(const LexemaView& lv, LexType lt, SemanticTree st) con
 /// <param name="b">Тип второго операнда</param>
 /// <param name="sign">Тип операции</param>
 /// <returns>Тип результата выполнения операции</returns>
-SemanticType Utils::GetResultType(SemanticType a, SemanticType b, LexType sign) const
+SemanticType Utils::GetResultType(SemanticType a, SemanticType b, LexType sign)
 {
 	if (a == SemanticType::Undefined || b == SemanticType::Undefined)
 	{
@@ -88,11 +88,68 @@ SemanticType Utils::GetResultType(SemanticType a, SemanticType b, LexType sign) 
 	return SemanticType::ShortInt;
 }
 
-void Utils::CheckWhileExp(Data* data, SemanticTree st) const
+void Utils::CheckWhileExp(Data* data, SemanticTree * st)
 {
 	if (!IsComparableType(data->type, SemanticType::ShortInt))
 	{
-		st.SemanticExit({ "ShortInt" }, ErrorCode::WaitForOtherType);
+		st->SemanticExit({ "ShortInt" }, ErrorCode::WaitForOtherType);
+	}
+}
+
+std::string Utils::NameToString(std::vector<LexemaView>& ids)
+{
+	std::string res = "";
+	if (!ids.empty())
+		res = ids[0];
+	for (size_t i = 1; i < ids.size(); i++)
+	{
+		res += "." + ids[i];
+	}
+	return res;
+}
+
+SemanticType Utils::GetType(LexType type_type, LexType next_type)
+{
+	switch (type_type)
+	{
+	case LexType::Short:
+		if (next_type != LexType::Int)
+			return SemanticType::Undefined;
+		return SemanticType::ShortInt;
+	case LexType::Long:
+		if (next_type != LexType::Int)
+			return SemanticType::Undefined;
+		return SemanticType::LongInt;
+	default: return SemanticType::Undefined;
+	}
+}
+
+SemanticType Utils::GetType(LexType type_type, const LexemaView& type_view, SemanticTree * st)
+{
+	switch (type_type)
+	{
+	case LexType::Void:
+		return SemanticType::Void;
+	case LexType::Int:
+		return SemanticType::ShortInt;
+	case LexType::Float:
+		return SemanticType::Float;
+	case LexType::Id:
+	{
+		auto nod = st->FindUp(type_view);
+		if (nod != nullptr)
+		{
+			if (nod->_data->type == SemanticType::Class) {
+				SemanticType type = SemanticType::ClassObj;
+				type.id = type_view;
+				return type;
+			}
+		}
+
+		return SemanticType::Undefined;
+	}
+	default:
+		return SemanticType::Undefined;
 	}
 }
 

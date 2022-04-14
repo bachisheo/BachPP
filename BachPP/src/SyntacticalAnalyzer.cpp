@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <utility>
+#include "../Utils.h"
 
 SyntacticalAnalyzer::SyntacticalAnalyzer(Scanner* sc) : _sc(sc)
 {
@@ -67,7 +68,7 @@ void SyntacticalAnalyzer::WhileExecute()
 	ScanAndCheck(LexType::LRoundBracket);
 	const auto data = Expression();
 	ScanAndCheck(LexType::RRoundBracket);
-	_tree->CheckWhileExp(data);
+	Utils::CheckWhileExp(data, *_tree);
 	Operator();
 }
 // --{ declInFunc } --
