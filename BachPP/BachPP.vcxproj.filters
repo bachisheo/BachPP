@@ -69,5 +69,12 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="tests\input1.txt" />
+    <Text Include="tests\input2.txt" />
+    <Text Include="tests\input3.txt" />
+    <Text Include="tests\input4.txt" />
+    <Text Include="tests\input5.txt" />
+    <Text Include="tests\input6.txt" />
   </ItemGroup>
 </Project>

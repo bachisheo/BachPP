@@ -7,12 +7,9 @@
 int a = 3;
 int main()
 {
-	std::cout << (3 << 1);
-
 	SetConsoleOutputCP(1251);
 	SetConsoleCP(1251);
-	//for(int i = 2; i < 3; i++)
-	int i = 4;
+	for(int i = 1; i < 7; i++)
 	{
 		std::string fname = "tests\\input" + std::to_string(i) + ".txt";
 		std::cout << "\n-------------------Code\n";
