@@ -162,15 +162,15 @@ SemanticType SyntacticalAnalyzer::ScanType(LexemaView& lv) const
 	return Utils::GetType(lex, lv, _tree);
 }
 
-void SyntacticalAnalyzer::TypeConvToLarge(Operand* a, Operand* b)
+void SyntacticalAnalyzer::TypeConvToLarge(Operand** a, Operand** b)
 {
-	if (a->type != b->type)
+	if ((*a)->type != (*b)->type)
 	{
-		if (a->type == SemanticType::Float) {
-			b = TypeConv(b, SemanticType::Float);
+		if ((*a)->type == SemanticType::Float) {
+			(*b) = TypeConv(*b, SemanticType::Float);
 		}
 		else {
-			a = TypeConv(a, SemanticType::Float);
+			(*a) = TypeConv(*a, SemanticType::Float);
 		}
 	}
 }
@@ -313,7 +313,7 @@ Operand* SyntacticalAnalyzer::ElementaryExpression()
 
 Operand* SyntacticalAnalyzer::BinaryOperation(Operand* o1, Operand* o2, LexType sign)
 {
-	TypeConvToLarge(o1, o2);
+	TypeConvToLarge(&o1, &o2);
 	return tg.BinaryOperation(o1, o2, sign);
 }
 

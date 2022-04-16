@@ -1,28 +1,5 @@
-//вычисление выражений без приведения типов
-//integer
-int a = 1, b = -1;
-int c = a * b + (a + b);
-int d = a >> c;
-int e = 12 << 4;
-//float
-float x = 1e-2;
-float y = 1e0 * x * x;
-float z = y / x;
-//integer (логические операции)
+int a, b;
+float f;
 int main(){
-        int a = 1, b = -4;
-        float c = 30e0, d = 1e-5;;
-        int true, false;
-        true = a * (-4) == b;
-        true = a != b;
-        true = c != b * a;
-        true = c <= c;
-        true = a * 100 > c;
-        true = c + d > c;
-        false = a < b;
-        false = a != a;
-        false = a == c;
-        false = c == c + d;
-        return true;
+	a = a + b + f;
 }
-
