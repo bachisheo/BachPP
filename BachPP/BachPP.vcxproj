@@ -141,10 +141,13 @@
   <ItemGroup>
     <ClCompile Include="src\BachPP.cpp" />
     <ClCompile Include="src\BaseTree.cpp" />
+    <ClCompile Include="src\Exception\CompilException.h" />
     <ClCompile Include="src\Scanner.cpp" />
     <ClCompile Include="src\SemanticNode.cpp" />
     <ClCompile Include="src\SemanticTree.cpp" />
     <ClCompile Include="src\SyntacticalAnalyzer.cpp" />
+    <ClCompile Include="src\TriadGenerator.cpp" />
+    <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\BaseTree.h" />
@@ -153,6 +156,16 @@
     <ClInclude Include="src\SemanticNode.h" />
     <ClInclude Include="src\SemanticTree.h" />
     <ClInclude Include="src\SyntacticalAnalyzer.h" />
+    <ClInclude Include="src\TriadGenerator.h" />
+    <ClInclude Include="Utils.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="tests\input1.txt" />
+    <Text Include="tests\input2.txt" />
+    <Text Include="tests\input3.txt" />
+    <Text Include="tests\input4.txt" />
+    <Text Include="tests\input5.txt" />
+    <Text Include="tests\input6.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

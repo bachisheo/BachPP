@@ -131,5 +131,15 @@ namespace UnitTests
 				testScan(code);
 			}
 		}
+		TEST_METHOD(Expressions)
+		{
+			std::vector<std::string> codes = {" int a = 2 + 3;",
+				"int a = 1, b = -1; int c = a * b + (a + b); "
+			};
+			for (auto code : codes)
+			{
+				testScan(code);
+			}
+		}
 	};
 }

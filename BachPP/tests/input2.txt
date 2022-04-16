@@ -1,0 +1,20 @@
+int a = 1, b = 2, c = 3;
+float fx = 1e0, fy = 4e-1, fz = 3e2;
+float foo(){
+	int a = 2;
+	return a;
+}
+int bar(){
+	float f = 2e2;
+	return f;
+}
+int main(){
+	fx = a * fz + c;
+	a = fy;
+	fx = c << (c > b);
+	a = foo();
+	b = bar();
+	fx = foo();
+	fx = bar();
+	return fx;
+}

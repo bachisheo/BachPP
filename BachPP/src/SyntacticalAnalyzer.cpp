@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <utility>
+#include "../Utils.h"
 
 SyntacticalAnalyzer::SyntacticalAnalyzer(Scanner* sc) : _sc(sc)
 {
@@ -27,7 +28,7 @@ void SyntacticalAnalyzer::Operator()
 	}
 	case LexType::Return: {
 		_sc->Scan();
-		auto returnedData = Expression();
+		ReturnDeclare(Expression());
 		ScanAndCheck(LexType::DotComma);
 		break;
 	}
@@ -53,22 +54,26 @@ void SyntacticalAnalyzer::Operator()
 		auto exprResult = Expression();
 		if (isAssigment)
 		{
-			//_tree->SetData(destination, exprResult);
+			
+			SetValue(destination, exprResult);
 		}
 		ScanAndCheck(LexType::DotComma);
 		break;
 	}
-	default:_tree->SemanticExit({"оператор"}, ErrorCode::WrongSyntax);
+	default:_tree->SemanticExit({ "оператор" }, ErrorCode::WrongSyntax);
 	}
 }
 int i = 0;
 void SyntacticalAnalyzer::WhileExecute()
 {
+	size_t expression_start_triad = tg.triads.size(), if_triad;
 	ScanAndCheck(LexType::LRoundBracket);
 	const auto data = Expression();
+	Utils::CheckWhileExp(data->type, _tree);
 	ScanAndCheck(LexType::RRoundBracket);
-	_tree->CheckWhileExp(data);
+	if_triad = tg.WhileIfTriada();
 	Operator();
+	tg.WhileGotoTriada(if_triad, expression_start_triad);
 }
 // --{ declInFunc } --
 void SyntacticalAnalyzer::CompoundBlock()
@@ -77,7 +82,7 @@ void SyntacticalAnalyzer::CompoundBlock()
 	Block();
 	_tree->SetTreePtr(comp_block);
 }
-Node * SyntacticalAnalyzer::Block()
+Node* SyntacticalAnalyzer::Block()
 {
 	auto comp_block = _tree->AddEmptyNodeAsChild();
 	ScanAndCheck(LexType::LFigBracket);
@@ -152,9 +157,29 @@ SemanticType SyntacticalAnalyzer::ScanType(LexemaView& lv) const
 	auto lex = _sc->Scan(lv);
 	if (lex == LexType::Short || lex == LexType::Long) {
 		auto nextLex = _sc->Scan();
-		return _tree->GetType(lex, nextLex);
+		return Utils::GetType(lex, nextLex);
 	}
-	return _tree->GetType(lex, lv);
+	return Utils::GetType(lex, lv, _tree);
+}
+
+void SyntacticalAnalyzer::TypeConvToLarge(Operand* a, Operand* b)
+{
+	if (a->type != b->type)
+	{
+		if (a->type == SemanticType::Float) {
+			b = TypeConv(b, SemanticType::Float);
+		}
+		else {
+			a = TypeConv(a, SemanticType::Float);
+		}
+	}
+}
+Operand* SyntacticalAnalyzer::TypeConv(Operand* a, SemanticType neededType)
+{
+	if (a->type == neededType) return a;
+	if (!Utils::IsComparableType(a->type, neededType))
+		_tree->SemanticExit({ a->type.id, neededType.id }, ErrorCode::WrongTypeConversion);
+	else return tg.TypeConv(a, neededType);
 }
 
 //---- class id { Program } ;----
@@ -172,45 +197,46 @@ void SyntacticalAnalyzer::ClassDeclare()
 	ScanAndCheck(LexType::RFigBracket);
 	ScanAndCheck(LexType::DotComma);
 }
-Data* SyntacticalAnalyzer::Expression()
+Operand* SyntacticalAnalyzer::Expression()
 {
 	auto o1 = LogicalExpression();
 	auto nextLex = LookForward();
 	while (nextLex == LexType::LogEqual || nextLex == LexType::LogNotEqual) {
 		auto sign = _sc->Scan();
-		o1 = _tree->LogicalOperation(o1, LogicalExpression(), sign);
+		o1 = BinaryOperation(o1, LogicalExpression(), sign);
 		nextLex = LookForward();
 	}
 	return o1;
 }
 
-Data* SyntacticalAnalyzer::LogicalExpression()
+Operand* SyntacticalAnalyzer::LogicalExpression()
 {
 	auto o1 = ShiftExpression();
 	auto nextLex = LookForward();
 	while (nextLex == LexType::Less || nextLex == LexType::LessOrEqual ||
 		nextLex == LexType::More || nextLex == LexType::MoreOrEqual) {
 		auto sign = _sc->Scan();
-		o1 = _tree->LogicalOperation(o1, ShiftExpression(), sign);
+		o1 = BinaryOperation(o1, ShiftExpression(), sign);
 		nextLex = LookForward();
 	}
 	return o1;
 }
 
-Data* SyntacticalAnalyzer::ShiftExpression()
+Operand* SyntacticalAnalyzer::ShiftExpression()
 {
+
 	auto o1 = AdditionalExpression();
 	auto nextLex = LookForward();
 	while (nextLex == LexType::ShiftLeft || nextLex == LexType::ShiftRight) {
 		auto sign = _sc->Scan();
 		auto o2 = AdditionalExpression();
-		o1 = _tree->BinaryOperation(o1, o2, sign);
+		o1 = BinaryOperation(o1, o2, sign);
 		nextLex = LookForward();
 	}
 	return o1;
 }
 
-Data* SyntacticalAnalyzer::AdditionalExpression()
+Operand* SyntacticalAnalyzer::AdditionalExpression()
 {
 	auto nextLex = LookForward();
 	bool unaryOperation = false;
@@ -222,40 +248,41 @@ Data* SyntacticalAnalyzer::AdditionalExpression()
 	auto o1 = MultExpression();
 	if (unaryOperation)
 	{
-		o1 = _tree->UnaryOperation(o1, sign);
+		o1 = UnaryOperation(o1, sign);
 	}
 	nextLex = LookForward();
 	while (nextLex == LexType::Plus || nextLex == LexType::Minus) {
 		sign = _sc->Scan();
-		o1 = _tree->BinaryOperation(o1, MultExpression(), sign);
+		o1 = BinaryOperation(o1, MultExpression(), sign);
 		nextLex = LookForward();
 	}
 	return o1;
 }
 
-Data* SyntacticalAnalyzer::MultExpression()
+Operand* SyntacticalAnalyzer::MultExpression()
 {
 	auto o1 = ElementaryExpression();
 	auto nextLex = LookForward();
 	while (nextLex == LexType::DivSign || nextLex == LexType::ModSign || nextLex == LexType::MultSign) {
 		auto sign = _sc->Scan();
 		auto o2 = ElementaryExpression();
-		o1 = _tree->BinaryOperation(o1, o2, sign);
+		o1 = BinaryOperation(o1, o2, sign);
 		nextLex = LookForward();
 	}
 	return o1;
 }
 
-Data* SyntacticalAnalyzer::ElementaryExpression()
+Operand* SyntacticalAnalyzer::ElementaryExpression()
 {
 	LexType lexType = LookForward();
 	LexemaView lexemaView;
-	Data* result = new Data(SemanticType::Undefined, "");
+	Operand* result = new Operand();
+	result->type = SemanticType::Undefined;
 	switch (lexType) {
 	case LexType::ConstExp:
 	case LexType::ConstInt:
 		_sc->Scan(lexemaView);
-		result = _tree->GetConstData(lexemaView, lexType);
+		result = Utils::GetConstOperand(lexemaView, lexType, _tree);
 		break;
 
 	case LexType::Id: {
@@ -265,10 +292,11 @@ Data* SyntacticalAnalyzer::ElementaryExpression()
 		if (lexType == LexType::LRoundBracket) {
 			_sc->Scan();
 			ScanAndCheck(LexType::RRoundBracket);
+			result = FunctionExecute(ids);
 		}
 		else
 		{
-			result = _tree->GetNodeValue(ids);
+			result = Utils::GetDataOperand(_tree->GetNodeValue(ids));
 		}
 		break;
 	}
@@ -278,9 +306,37 @@ Data* SyntacticalAnalyzer::ElementaryExpression()
 		ScanAndCheck(LexType::RRoundBracket);
 		break;
 	default:
-		_tree->SemanticExit({ "Ожидается операнд, но встречен \"" , LexTypesName.find(lexType)->second, "\"" },ErrorCode::WrongSyntax);
+		_tree->SemanticExit({ "Ожидается операнд, но встречен \"" , LexTypesName.find(lexType)->second, "\"" }, ErrorCode::WrongSyntax);
 	}
 	return result;
+}
+
+Operand* SyntacticalAnalyzer::BinaryOperation(Operand* o1, Operand* o2, LexType sign)
+{
+	TypeConvToLarge(o1, o2);
+	return tg.BinaryOperation(o1, o2, sign);
+}
+
+Operand* SyntacticalAnalyzer::UnaryOperation(Operand* o1, LexType sign)
+{
+	return tg.UnaryOperation(o1, sign);
+}
+
+void SyntacticalAnalyzer::SetValue(Operand* dest, Operand* src)
+{
+	if(dest->type != src->type)
+	{
+		src = TypeConv(src, dest->type);
+	}
+	tg.SetValue(src, dest);
+}
+
+void SyntacticalAnalyzer::SetValue(Node* destination, Operand* src)
+{
+	auto dest = new Operand();
+	dest->type = destination->_data->type;
+	dest->lexema = destination->_data->id;
+	SetValue(dest, src);
 }
 
 //     ---|     CLASS		|---
@@ -298,7 +354,7 @@ void SyntacticalAnalyzer::Program(LexType endLex)
 			_sc->GetPtrs(_ptr, _line, _col);
 			LexemaView type_view;
 			if (ScanType(type_view) == SemanticType::Undefined)
-				_tree->SemanticExit({ "Тип \'" , type_view, "\' не определен" },ErrorCode::Undefined);
+				_tree->SemanticExit({ "Тип \'" , type_view, "\' не определен" }, ErrorCode::Undefined);
 			//получить следующую за id лексему
 			nextLex = LookForward(2);
 			_sc->SetPtrs(_ptr, _line, _col);
@@ -313,7 +369,8 @@ void SyntacticalAnalyzer::Program(LexType endLex)
 
 void SyntacticalAnalyzer::PrintSemanticTree(std::ostream& out) const
 {
-	_tree->Print(out);
+	//_tree->Print(out);
+	tg.printTriads();
 }
 
 void SyntacticalAnalyzer::LexExit(const std::vector<std::string>& waiting) const
@@ -370,7 +427,7 @@ void SyntacticalAnalyzer::FunctionDeclare()
 	auto returned_type = ScanType(type_view);
 
 	if (returned_type == SemanticType::Undefined) {
-		_tree->SemanticExit({ "Тип \'" , type_view, "\' не определен" },ErrorCode::Undefined);
+		_tree->SemanticExit({ "Тип \'" , type_view, "\' не определен" }, ErrorCode::Undefined);
 	}
 
 	returned_type.id = type_view;
@@ -380,10 +437,24 @@ void SyntacticalAnalyzer::FunctionDeclare()
 	ScanAndCheck(LexType::LRoundBracket);
 	ScanAndCheck(LexType::RRoundBracket);
 	auto func_node = _tree->AddFunctionDeclare(returned_type, func_name, func_body);
+	tg.DeclFunctionBegin(func_name);
 	Block();
+	tg.DeclFunctionEnd();
 	_tree->SetTreePtr(func_node);
 }
 
+void SyntacticalAnalyzer::ReturnDeclare(Operand* returned)
+{
+	auto func = dynamic_cast<FunctionData*>(_tree->FindCurrentFunc()->_data);
+	TypeConv(returned, func->returned_type);
+	tg.DeclFunctionRet();
+}
+
+Operand * SyntacticalAnalyzer::FunctionExecute(std::vector<LexemaView> name)
+{
+	auto func = dynamic_cast<FunctionData*>(_tree->FindUp(name[name.size() - 1])->_data);
+	return tg.FunctionCall(func->id, func->returned_type);
+}
 
 
 //type var |;
@@ -411,7 +482,8 @@ void SyntacticalAnalyzer::DataDeclare()
 	//initiate, if needed
 	if (LookForward() == LexType::Equal) {
 		_sc->Scan();
-		Expression();
+		auto exprResult = Expression();
+		SetValue(variable, exprResult);
 	}
 
 	while (LookForward() == LexType::Comma) {
@@ -427,7 +499,8 @@ void SyntacticalAnalyzer::DataDeclare()
 		//initiate, if needed
 		if (LookForward() == LexType::Equal) {
 			_sc->Scan();
-			Expression();
+			auto exprResult = Expression();
+			SetValue(variable, exprResult);
 		}
 	}
 	ScanAndCheck(LexType::DotComma);
