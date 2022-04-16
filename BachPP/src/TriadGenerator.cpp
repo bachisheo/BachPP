@@ -82,7 +82,11 @@ void TriadGenerator::DeclFunctionEnd()
 	{
 		triads[rets].operand1 = Operand(epilog_id);
 	}
-	_current_rets.clear();
+	int i = _current_rets.size();
+	if (i) {
+		triads[_current_rets[i-1]] = Triada("nop");
+		_current_rets.clear();
+	}
 }
 
 void TriadGenerator::DeclFunctionRet()

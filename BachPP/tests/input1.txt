@@ -1,4 +1,4 @@
-//вычисление выражений без приведения типов
+//вычисление выражений 
 //integer
 int a = 1, b = -1;
 int c = a * b + (a + b);
@@ -14,14 +14,9 @@ int main(){
         float c = 30e0, d = 1e-5;;
         int true, false;
         true = a * (-4) == b;
-        true = a != b;
         true = c != b * a;
-        true = c <= c;
         true = a * 100 > c;
         true = c + d > c;
-        false = a < b;
-        false = a != a;
-        false = a == c;
         false = c == c + d;
         return true;
 }

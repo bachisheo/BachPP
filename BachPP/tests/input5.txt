@@ -1,18 +1,18 @@
-float o = 24 * (-45e0) ;
 class C{
-	int a = 1, b = 2;
-	float sd = -1e2;
+	int a, b;
+	float sd;
 	float bar(){
 	int f = 4;
 	return f;
 	}
 };
-int k = 1e-2;
 C c;
-
+C funcC(){
+	return c;
+}
 int main(){
-	c.a = c.a + c.b + c.sd;
-	c.sd = 24 *  (-45e0) ;
-	
+	C obj = funcC();
+	obj.a = c.a + c.b + c.sd;
+	obj.sd = 24 *  (-45e0) ;
 	return 1;
 }
