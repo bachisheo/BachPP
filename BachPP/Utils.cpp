@@ -1,4 +1,5 @@
 #include "Utils.h"
+#include "src/TriadGenerator.h"
 /// <summary>
 /// ѕроверить, можно ли привести тип выражени€ к типу используемой синтаксической конструкции
 /// </summary>
@@ -25,34 +26,39 @@ int numberStrCmp(std::string a, std::string b)
 	return strcmp(a.c_str(), b.c_str());
 }
 
-Data* Utils::GetConstData(const LexemaView& lv, LexType lt, SemanticTree* st)
+Operand* Utils::GetConstOperand(const LexemaView& lv, LexType lt, SemanticTree* st)
 {
-	Data* result = new Data();
+	auto result = new Operand();
+	result->lexema = lv;
 	switch (lt)
 	{
 	case LexType::ConstExp: {
 		result->type = SemanticType::Float;
-		result->value.float_value = atof(lv.c_str());
 		break;
 	}
 	case LexType::ConstInt:
 		if (numberStrCmp(lv, MaxShort) <= 0) {
 			result->type = SemanticType::ShortInt;
-			result->value.short_int_value = atoi(lv.data());
 		}
 		else
 			if (numberStrCmp(lv, MaxLong) <= 0) {
 				result->type = SemanticType::LongInt;
-				result->value.short_int_value = atoi(lv.data());
 			}
 			else
 				st->SemanticExit({ std::to_string(MAX_LEX) }, ErrorCode::TooLargeConstSize);
 		break;
 	default:
 		st->SemanticExit({ lv }, ErrorCode::UndefinedConstType);
-
 	}
 	return result;
+}
+
+Operand* Utils::GetDataOperand(Data* data)
+{
+	auto o = new Operand();
+	o->type = data->type;
+	o->lexema = data->id;
+	return o;
 }
 
 
@@ -88,9 +94,9 @@ SemanticType Utils::GetResultType(SemanticType a, SemanticType b, LexType sign)
 	return SemanticType::ShortInt;
 }
 
-void Utils::CheckWhileExp(Data* data, SemanticTree * st)
+void Utils::CheckWhileExp(SemanticType type, SemanticTree * st)
 {
-	if (!IsComparableType(data->type, SemanticType::ShortInt))
+	if (!IsComparableType(type, SemanticType::ShortInt))
 	{
 		st->SemanticExit({ "ShortInt" }, ErrorCode::WaitForOtherType);
 	}
@@ -150,6 +156,28 @@ SemanticType Utils::GetType(LexType type_type, const LexemaView& type_view, Sema
 	}
 	default:
 		return SemanticType::Undefined;
+	}
+}
+
+std::string Utils::LexTypeToString(LexType a)
+{
+	switch(a)
+	{
+	case LexType::Plus: return "+";
+	case LexType::Minus: return "-";
+	case LexType::DivSign: return "/";
+	case LexType::ModSign: return "%";
+	case LexType::Equal : return "=";
+	case LexType::LogEqual : return "==";
+	case LexType::LogNotEqual : return "!=";
+	case LexType::ShiftRight: return ">>";
+	case LexType::ShiftLeft: return "<<";
+	case LexType::MultSign: return "*";
+	case LexType::Less: return "<";
+	case LexType::More: return ">";
+	case LexType::MoreOrEqual: return ">=";
+	case LexType::LessOrEqual: return "<=";
+	default: return "a gde type?";
 	}
 }
 
