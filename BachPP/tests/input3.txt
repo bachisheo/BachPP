@@ -1,0 +1,21 @@
+//Операторы:
+//1. Проверка на корректность return 
+//(операции после него не должны выполняется)
+int i = 0;
+int j = 10;
+int while_test(){
+	i = i + 1;
+	while(i < 4){
+		while_test();
+		while(i > 0){
+			return i;
+			j = j + 1000;
+			}
+	}
+	j = j + 2;
+	return j;
+}
+	
+int main(){
+	return while_test();
+}
