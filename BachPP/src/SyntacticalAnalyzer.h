@@ -35,7 +35,7 @@ private:
 	void DataDeclare();
 	std::vector<LexemaView> GetFullName();
 	SemanticType ScanType(LexemaView& lv) const;
-	void TypeConvToLarge(Operand* a, Operand* b);
+	void TypeConvToLarge(Operand** a, Operand** b);
 	Operand * TypeConv(Operand* a, SemanticType neededType);
 	void ClassDeclare();
 	Operand* Expression();
