@@ -186,3 +186,11 @@ bool SemanticTree::IsEnableUnaryOperation(SemanticType type) const
 	return false;
 }
 
+Node * SemanticTree::FindCurrentFunc() const 
+{
+	Node * func_node = _current;
+	while (func_node->_data->type != SemanticType::Function) {
+		func_node = func_node->GetParent();
+	}
+	return func_node;
+}
