@@ -8,6 +8,7 @@
 */
 #pragma once
 #include "SemanticTree.h"
+#include "TriadGenerator.h"
 class SyntacticalAnalyzer
 {
 public:
@@ -16,6 +17,7 @@ public:
 	void Program(LexType endLex = LexType::End);
 	void PrintSemanticTree(std::ostream& out) const;
 	std::vector<Node*> userTypes;
+	TriadGenerator tg = TriadGenerator();
 
 private:
 	SemanticTree* _tree;
@@ -28,22 +30,27 @@ private:
 	void LexExit(LexType waitingLex) const;
 	void DeclareInFunction();
 	void FunctionDeclare();
+	void ReturnDeclare(Operand *returned);
+	Operand * FunctionExecute(std::vector<LexemaView> name);
 	void DataDeclare();
 	std::vector<LexemaView> GetFullName();
 	SemanticType ScanType(LexemaView& lv) const;
+	void TypeConvToLarge(Operand* a, Operand* b);
+	Operand * TypeConv(Operand* a, SemanticType neededType);
 	void ClassDeclare();
-	Data* Expression();
-	Data* LogicalExpression();
-	Data* ShiftExpression();
-	Data* AdditionalExpression();
-	Data* MultExpression();
-	Data* ElementaryExpression();
-	Data* BinaryOperation(Data * o1, Data * o2, LexType sign) const;
-	Data* UnaryOperation(Data* o1, LexType sign);
-
+	Operand* Expression();
+	Operand* LogicalExpression();
+	Operand* ShiftExpression();
+	Operand* AdditionalExpression();
+	Operand* MultExpression();
+	Operand* ElementaryExpression();
+	Operand* BinaryOperation(Operand* o1, Operand* o2, LexType sign);
+	Operand* UnaryOperation(Operand* o1, LexType sign);
+	void SetValue(Operand* dest, Operand *src);
+	void SetValue(Node* dest, Operand *src);
 	void Operator();
 	void CompoundBlock();
-	Node * Block();
+	Node* Block();
 	void WhileExecute();
 };
 
